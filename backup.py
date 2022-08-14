@@ -127,6 +127,7 @@ def InitOneDrive():
             folderId=confData.folderId
          )
         oneDrive.CheckTokens()
+        oneDrive.UploadFile(oneDriveDir='backup',fileName='test')
         
 
 def Run():

@@ -150,14 +150,17 @@ class OneDrive:
             self.GetTokens(redirectionUrl=redirectionUrl)
             
             
-    def UploadFile(self,dir,fileName):
+    def UploadFile(self,oneDriveDir="",localDir=".",fileName="bck"):
         if self.tokens == None:
             self.__PerformLogin()
         else:
-            self.__UploadToOneDrive(
-                url=self.__GetUploadUrl(dir=dir,fileName=fileName),
-                fileName=(dir+'/'+fileName)
-            )
+            try:
+                self.__UploadToOneDrive(
+                    url=self.__GetUploadUrl(dir=oneDriveDir,fileName=fileName),
+                    file=(localDir+'/'+fileName)
+                )
+            except Exception as e:
+                logger.error("Error while performing upload to OneDrive: "+str(e))
     
     def __GetUploadUrl(self,dir,fileName):
         request_body = {
@@ -169,32 +172,45 @@ class OneDrive:
         headers = {
             'Authorization': 'Bearer '+self.tokens['access_token'],
         }
+        
+        getUploadSessionUrl = self.__GRAPH_API_URL + f'/me/drive/items/root:/'+ \
+        dir + '/'+ fileName+':/createUploadSession'
         response = requests.post(
-            self.__GRAPH_API_URL + f'/me/drive/items/'+self.folderId+':/'+fileName+':/createUploadSession',
+            getUploadSessionUrl,
             headers=headers,
             json=request_body
         )
-        return response['uploadUrl']
-    
+        logger.debug(response)
+        if response.status_code >= 200 and response.status_code < 300:
+            return response.json()['uploadUrl']
+        elif response.status_code == 401:
+            logger.warning("Access token is expired, renewing it! ")
+            self.RenewTokens()
+            self.__GetUploadUrl(dir,fileName)
+        else:
+            logger.error("Error while generating upload URL!")
+            logger.error("URL for getting upload session: "+getUploadSessionUrl)
+            return None
+            
     def __UploadToOneDrive(self,url,file):
         f = open(file)
         fileSize = os.path.getsize(file)
         uploadedBytes = 0
         start = timer()
-        logging.info("Uploading file: "+file)
-        logging.debug("File size: "+str(fileSize))
+        logger.info("Uploading file: "+file)
+        logger.debug("File size: "+str(fileSize))
         try:
             while uploadedBytes < fileSize:
                 if fileSize < self.__CHUNK_SIZE:
-                    logging.debug("File is less than 31.25MB")
+                    logger.debug("File is less than 31.25MB")
                     sizeCurrRequest = fileSize
                 elif (fileSize-f.tell()) < self.__CHUNK_SIZE:
-                    logging.debug("Uploading last fragment ")
+                    logger.debug("Uploading last fragment ")
                     sizeCurrRequest = fileSize - f.tell()
                 else:
                     sizeCurrRequest = self.__CHUNK_SIZE
-                logging.debug("Size of current fragment: "+str(sizeCurrRequest))
-                logging.debug("Current state : bytes "+str(uploadedBytes)+'-'+str(uploadedBytes+sizeCurrRequest-1)+'/'+str(fileSize))
+                logger.debug("Size of current fragment: "+str(sizeCurrRequest))
+                logger.debug("Current state : bytes "+str(uploadedBytes)+'-'+str(uploadedBytes+sizeCurrRequest-1)+'/'+str(fileSize))
                 headers = {
                     'Content-Length': str(sizeCurrRequest),
                     'Content-Range': 'bytes '+str(uploadedBytes)+'-'+str(uploadedBytes+sizeCurrRequest-1)+'/'+str(fileSize)
@@ -202,17 +218,17 @@ class OneDrive:
                 data = f.read(sizeCurrRequest)
                 response = requests.put(url,data=data,headers=headers)
                 if response.status_code >= 300:
-                    logging.error("Error while uploading file: "+str(file)+" to OneDrive!")
-                    logging.error("Response code: "+response.status_code+"\nResponse text: "+response.text)
+                    logger.error("Error while uploading file: "+str(file)+" to OneDrive!")
+                    logger.error("Response code: "+response.status_code+"\nResponse text: "+response.text)
                     return
                 uploadedBytes+=sizeCurrRequest
         except Exception as e:
             logger.error(str(e))
         end = timer()
-        logging.info("Successfully uploadde file")
-        logging.debug("Terminating upload session from OneDrive")
+        logger.info("Successfully uploadde file")
+        logger.debug("Terminating upload session from OneDrive")
         response = requests.delete(url)
-        logging.debug("Session successfuly terminated")
-        logging.info("Time took for uploading: " +
+        logger.debug("Session successfuly terminated")
+        logger.info("Time took for uploading: " +
                 str(timedelta(seconds=end - start)))
             
