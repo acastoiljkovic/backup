@@ -32,7 +32,7 @@ class OneDrive:
             scopes (array): Array of Microsoft scopes ie. ['User.Read']
             tokens (json, optional): JSON object that contains access and refres tokens. Defaults to None.
             tokensFile (str, optional): File where JSON tokes will be stored. Defaults to './tokens.json'.
-            tenantId (string, optional): Micriostf Tenant ID where your application is beeing deployd. 
+            tenantId (string, optional): Micriostf Tenant ID where your application is beeing deployd.
                                          If you are using personal account backup system will use default "common".
         """
         self.clientSecret = clientSecret
@@ -166,6 +166,8 @@ class OneDrive:
             self.GetTokens(redirectionUrl=redirectionUrl)
 
     def UploadFile(self, oneDriveDir="", localDir=".", fileName="bck"):
+        if oneDriveDir[0] == '/':
+            oneDriveDir = oneDriveDir[1:]
         if self.tokens == None:
             self.__PerformLogin()
         else:
@@ -210,12 +212,25 @@ class OneDrive:
         getUploadSessionUrl = self.__GRAPH_API_URL + f'/me/drive/items/root:/' + \
             dir + '/' + fileName+':/createUploadSession'
         logger.debug("URL for getting upload session: "+getUploadSessionUrl)
-        response = requests.post(
-            getUploadSessionUrl,
-            headers=headers,
-            json=request_body
-        )
-        return response
+        try:
+            response = requests.post(
+                getUploadSessionUrl,
+                headers=headers,
+                json=request_body
+            )
+            if response.status_code >= 200 and response.status_code < 300:
+                logger.debug(response.json())
+                return response
+            elif response.status_code == 401:
+                logger.warning("Access token is expired, renewing it! ")
+                self.RenewTokens()
+                return self.__GetUploadUrlRequest(dir, fileName).json()['uploadUrl']
+            else:
+                logger.error("Error while generating upload URL!")
+                return None
+        except Exception as e:
+            logger.error(str(e))
+            logger.debug("Response code: "+response.status_code)
 
     def __UploadToOneDrive(self, url, file):
         f = open(file)
@@ -242,7 +257,13 @@ class OneDrive:
                     'Content-Range': 'bytes '+str(uploadedBytes)+'-'
                     + str(uploadedBytes+sizeCurrRequest-1)+'/'+str(fileSize)
                 }
-                data = f.read(sizeCurrRequest)
+                if ".gz" in file:
+                    import gzip
+                    f = gzip.open(file)
+                    data = f.read(sizeCurrRequest)
+                else:
+                    data = f.read(sizeCurrRequest)
+
                 response = requests.put(url, data=data, headers=headers)
                 if response.status_code >= 300:
                     logger.error("Error while uploading file: " +
@@ -262,13 +283,17 @@ class OneDrive:
                     str(timedelta(seconds=end - start)))
 
     def RemoveOldFiles(self, fileName, oneDriveDir, encrypt, noCopies=3):
+        if oneDriveDir[0] == '/':
+            oneDriveDir = oneDriveDir[1:]
+        fileName = fileName.strip()
+        noCopies = int(noCopies)
         try:
+            logger.debug("File Name for removal: "+fileName)
             logger.debug("Fetching list of files")
             list_of_files = self.__ListFilesForRemoval(
                 fileName=fileName,
                 oneDriveDir=oneDriveDir,
-                encrypt=encrypt,
-                noCopies=noCopies
+                encrypt=encrypt
             )
             keep_list = []
             rem_list = []
@@ -305,7 +330,7 @@ class OneDrive:
         except Exception as e:
             logger.error(str(e))
 
-    def __ListFilesForRemoval(self, fileName, oneDriveDir, encrypt, noCopies=3):
+    def __ListFilesForRemoval(self, fileName, oneDriveDir, encrypt):
         list_of_files = []
         try:
             headers = {
@@ -314,15 +339,16 @@ class OneDrive:
 
             getListUrl = self.__GRAPH_API_URL + f'/me/drive/items/root:/' + \
                 oneDriveDir + ':/children'
-            logger.debug("URL for listing directory: "+getListUrl)
+            logger.debug("URL for listing directory: "+str(getListUrl))
             response = requests.get(
                 getListUrl,
                 headers=headers
             )
+            logger.debug(response.json())
             if response.status_code >= 200 and response.status_code < 300:
                 for i in response.json()["value"]:
                     if fileName in str(i["name"]):
-                        if encrypt:
+                        if str(encrypt).upper() == "TRUE":
                             if str(i["name"]).endswith(".enc"):
                                 logger.debug("Find file: " + i["name"])
                                 list_of_files.append(i)
@@ -335,7 +361,7 @@ class OneDrive:
                 logger.warning("Access token is expired, renewing it! ")
                 self.RenewTokens()
                 list_of_files = self.__ListFilesForRemoval(
-                    fileName, oneDriveDir, encrypt, noCopies)
+                    fileName, oneDriveDir, encrypt)
             else:
                 logger.error("Listing directories failed with status code: " +
                              str(response.status_code)
@@ -369,5 +395,54 @@ class OneDrive:
                 logger.error("Error wile deleting file: " +
                              oneDriveElement['name']+" , with statsu code: " +
                              str(response.status_code))
+        except Exception as e:
+            logger.error(str(e))
+
+    def KeppOnlyNewestAndOldest(self, fileName, oneDriveDir, encrypt):
+        if oneDriveDir[0] == '/':
+            oneDriveDir = oneDriveDir[1:]
+        fileName = fileName.strip()
+        try:
+            logger.debug("File Name for removal: "+fileName)
+            logger.debug("Fetching list of files")
+            list_of_files = self.__ListFilesForRemoval(
+                fileName=fileName,
+                oneDriveDir=oneDriveDir,
+                encrypt=encrypt
+            )
+            newest = None
+            oldest = None
+            rem_list = []
+            for i in list_of_files:
+                if i["name"].endswith(".snap"):
+                    pass
+                else:
+                    if newest != None and oldest != None:
+                        if newest["lastModifiedDateTime"] > i["lastModifiedDateTime"]:
+                            if oldest["lastModifiedDateTime"] < i["lastModifiedDateTime"]:
+                                rem_list.append(i)
+                            else:
+                                if oldest != newest:
+                                    rem_list.append(oldest)
+                                oldest = i
+                        else:
+                            if oldest == newest:
+                                oldest = i
+                            else:
+                                rem_list.append(newest)
+                                newest = i
+                    else:
+                        newest = i
+                        oldest = i
+
+            logger.debug("Newest file: "+newest["name"]+" Last Modified Date Time: " +
+                         newest["lastModifiedDateTime"])
+            logger.debug("Oldest file: "+oldest["name"]+" Last Modified Date Time: " +
+                         oldest["lastModifiedDateTime"])
+            logger.debug("Removing list: ")
+            for j in rem_list:
+                logger.debug("File name: "+j["name"]+" Last Modified Date Time: " +
+                         j["lastModifiedDateTime"])
+
         except Exception as e:
             logger.error(str(e))
