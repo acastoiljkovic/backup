@@ -7,11 +7,10 @@ from timeit import default_timer as timer
 
 logger = logging.getLogger("backup_logger")
 
-def Mysqldump(database, user, password, dest, encrypt, encPassword, noCopies):
+def Mysqldump(database, user, password, dest, encrypt, encPassword, noCopies, oneDrive=None):
     try:
         fileName =  'mysqldump_' + database + \
                 '_' + utils.GetCurrDateTime() + '.sql'
-        command = '/usr/bin/mysqldump -u ' + user + ' -p' + password + ' --single-transaction --quick --lock-tables=false ' + database + ' > ' + dest + '/'+ fileName
 
         mysqldump = ('/usr/bin/mysqldump -u ' + user +
                          ' -p' + password +
