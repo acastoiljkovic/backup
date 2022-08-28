@@ -2,17 +2,16 @@
 import logging
 import subprocess
 from datetime import datetime
-from sys import stdout
-from typing import List
+from paramiko import SSHClient
 
 logger = logging.getLogger("backup_logger")
 
 
-def Run(cmd):
+def run(cmd):
     """Execute provided command
 
     Args:
-        cmd (array): Array that contains command and it's arguments
+        cmd (string): Array that contains command and it's arguments
 
     Returns: (consists of 3 variables)
         int : return code after executing cmd
@@ -27,15 +26,14 @@ def Run(cmd):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        # stdout = proc.stdout.readlines()
-        # stderr = proc.stderr.readlines()
+
         stdout, stderr = proc.communicate()
         return proc.returncode, str(stdout, "utf-8"), str(stderr, "utf-8")
     except Exception as e:
-        logger.error("Error while executing comand, with exception: " + str(e))
+        logger.error("Error while executing command, with exception: " + str(e))
 
 
-def GetCurrDateTime():
+def get_curr_date_time():
     """Generate string of current time in format : YYYYmmDDHHMMSS    
 
     Returns:
@@ -44,8 +42,12 @@ def GetCurrDateTime():
     return datetime.now().strftime("%Y%m%d%H%M%S")
 
 
-def RunRemote(cmd, host):
+def run_remote(cmd, host):
     try:
+        client = SSHClient()
+        client.load_system_host_keys()
+        # if logger.level == logging.DEBUG:
+            # client.set_log_channel(name='backup_logger')
         logger.info("Executing command: " + str(cmd) + " on remote host: " + host)
         command = ""
         if len(cmd) >= 1:
@@ -53,19 +55,23 @@ def RunRemote(cmd, host):
                 command += str(c)
         logger.debug("Command as string: " + command)
 
-        proc = subprocess.Popen(
-            ["ssh", "%s" % host, command],
-            shell=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+        # proc = subprocess.Popen(
+        #     "ssh root@"+host + " "+command,
+        #     shell=True,
+        #     stdout=subprocess.PIPE,
+        #     stderr=subprocess.PIPE)
 
-        # stdout = proc.stdout.readlines()
-        # stderr = proc.stderr.readlines()
+        client.connect(hostname=host, username='root')
+        stdin, stdout, stderr = client.exec_command(
+            command=command,
+            timeout=10,
+            bufsize=-1)
+        # client.close()
+        # stdout, stderr = proc.communicate()
 
-        stdout, stderr = proc.communicate()
-        if stdout == []:
-            logger.error(proc.stderr.readlines())
+        if not stdout:
+            logger.error(stderr)
         else:
-            return proc.returncode, str(stdout, "utf-8"), str(stderr, "utf-8")
+            return 0, str(stdout.read(), "utf-8"), str(stderr.read(), "utf-8")
     except Exception as e:
         logger.error("Error while executing command, with exception: " + str(e))

@@ -3,146 +3,222 @@
 import configparser
 import os
 
-# KLASA KOJA
-#
 
-
+# > This class is used to store configuration data for the application
 class ConfigurationData:
-    """Class that load configiration from file 
+    """Class that load configuration from file
     """
-    # KONSTRUKTOR SA DEFAULTNIM VREDNOSTIMA UKOLIKO NEMAMO CONF FILE
-    #
 
     def __init__(
-        self,
-        noCopies=0,
-        logLevel='INFO',
-        backupMysql=False,
-        userMysql=None,
-        passwordMysql=None,
-        database=None,
-        dumpDest=None,
-        filePrefix=None,
-        encryptMysql=False,
-        encryptMysqlPassword='e!f@k',
-        onedriveMysqlDir=None,
-        backupDirs=False,
-        paths=None,
-        destination=None,
-        encryptDirs=False,
-        encryptDirsPassword='e!f@k',
-        backupType='Full',
-        onedriveBackupDir=None,
-        backupES=False,
-        esUrl=None,
-        esFull=False,
-        esIndex=None,
-        esLocation=None,
-        esRepo=None,
-        esUser=None,
-        esPassword=None,
-        esRemoveOld=False,
-        esRestore=False,
-        syncDirs=False,
-        src=None,
-        dst=None,
-        uploadToOnedrive=False,
-        clientSecret=None,
-        clientId=None,
-        tenantId=None,
-        scopes=None,
-        tokensFile=None,
-        syncHosts=[],
-        syncRemoteSrc=[],
-        syncRemoteDst=[],
-        mysqldumpHosts=[],
-        mysqldumpUsers=[],
-        mysqldumpPasswords=[],
-        mysqldumpDatabases=[],
-        mysqldumpDumpDest=[],
-        mysqldumpFilePrefixes=[],
-        mysqldumpEncrypt=[],
-        mysqldumpEncryptPasswords=[],
-        mysqldumpOneDriveDirs=[],
-        dirs2backupHosts=[],
-        dirs2backupPaths=[],
-        dirs2backupDestinations=[],
-        dirs2backupEncrypt=[],
-        dirs2backupEncryptPasswords=[],
-        dirs2backupBackupType=[],
-        dirs2backupOneDriveDirs=[],
+            self,
+            no_copies=0,
+            log_level='INFO',
+            remote_mysql = None,
+            remote_sync = None,
+            remote_backup_dirs = None,
+            backup_mysql=False,
+            user_mysql=None,
+            password_mysql=None,
+            database=None,
+            dump_dest=None,
+            file_prefix=None,
+            encrypt_mysql=False,
+            encrypt_mysql_password='e!f@k',
+            onedrive_mysql_dir=None,
+            backup_dirs=False,
+            paths=None,
+            destination=None,
+            encrypt_dirs=False,
+            encrypt_dirs_password='e!f@k',
+            backup_type='Full',
+            onedrive_backup_dir=None,
+            backup_es=False,
+            es_url=None,
+            es_full=False,
+            es_index=None,
+            es_location=None,
+            es_repo=None,
+            es_user=None,
+            es_password=None,
+            es_remove_old=False,
+            es_restore=False,
+            sync_dirs=False,
+            src=None,
+            dst=None,
+            upload_to_onedrive=False,
+            client_secret=None,
+            client_id=None,
+            tenant_id=None,
+            scopes=None,
+            tokens_file=None,
+            sync_hosts=None,
+            sync_remote_src=None,
+            sync_remote_dst=None,
+            mysqldump_hosts=None,
+            mysqldump_users=None,
+            mysqldump_passwords=None,
+            mysqldump_databases=None,
+            mysqldump_dump_dest=None,
+            mysqldump_file_prefixes=None,
+            mysqldump_encrypt=None,
+            mysqldump_encrypt_passwords=None,
+            mysqldump_one_drive_dirs=None,
+            dirs2backup_hosts=None,
+            dirs2backup_paths=None,
+            dirs2backup_destinations=None,
+            dirs2backup_encrypt=None,
+            dirs2backup_encrypt_passwords=None,
+            dirs2backup_backup_type=None,
+            dirs2backup_one_drive_dirs=None,
     ):
-        """Configuration data
 
-        Args:
-            noCopies (int, optional): Number of backup copies. Defaults to 0.
-            logLevel (str, optional): Level of logginf. Defaults to 'INFO'.
-            backupMysql (bool, optional): Doing mysqldump?. Defaults to False.
-            userMysql (_type_, optional): User for mysql. Defaults to None.
-            passwordMysql (_type_, optional): Password for mysql. Defaults to None.
-            database (_type_, optional): Mysql database. Defaults to None.
-            dumpDest (_type_, optional): Destination for mysqldump. Defaults to None.
-            filePrefix (_type_, optional): . Defaults to None.
-            encryptMysql (bool, optional): _description_. Defaults to False.
-            encryptMysqlPassword (str, optional): _description_. Defaults to 'e!f@k'.
-            onedriveMysqlDir (_type_, optional): _description_. Defaults to None.
-            backupDirs (bool, optional): _description_. Defaults to False.
-            paths (_type_, optional): _description_. Defaults to None.
-            destination (_type_, optional): _description_. Defaults to None.
-            encryptDirs (bool, optional): _description_. Defaults to False.
-            encryptDirsPassword (str, optional): _description_. Defaults to 'e!f@k'.
-            onedriveBackupDir (_type_, optional): _description_. Defaults to None.
-            syncDirs (bool, optional): _description_. Defaults to False.
-            src (_type_, optional): _description_. Defaults to None.
-            dst (_type_, optional): _description_. Defaults to None.
-            uploadToOnedrive (bool, optional): _description_. Defaults to False.
-            clientSecret (_type_, optional): _description_. Defaults to None.
-            clientID (_type_, optional): _description_. Defaults to None.
-            scopes (_type_, optional): _description_. Defaults to None.
-            tokensFile (_type_, optional): _description_. Defaults to None.
-            backup_type (string, optional): _description_. Defaults to full.
+        """
+        A constructor for the class.
+
+        :param no_copies: Number of backup copies to keep, defaults to 0 (optional)
+        :param log_level: The level of logging, defaults to INFO (optional)
+        :param backup_mysql: Do you want to backup a mysql database?, defaults to False (optional)
+        :param user_mysql: The user to connect to the MySQL database
+        :param password_mysql: Password for mysql
+        :param database: The name of the database to backup
+        :param dump_dest: The destination for the mysqldump file
+        :param file_prefix: This is the prefix of the file name
+        :param encrypt_mysql: If True, the mysqldump will be encrypted with the password in encrypt_mysql_password, defaults
+        to False (optional)
+        :param encrypt_mysql_password: Password for encrypting the mysqldump file, defaults to e!f@k (optional)
+        :param onedrive_mysql_dir: The directory on OneDrive where the mysqldump will be uploaded
+        :param backup_dirs: If True, the directories specified in the paths parameter will be backed up, defaults to False
+        (optional)
+        :param paths: The paths to backup
+        :param destination: The destination directory for the backup
+        :param encrypt_dirs: If True, the backup will be encrypted, defaults to False (optional)
+        :param encrypt_dirs_password: Password for encrypting directories, defaults to e!f@k (optional)
+        :param backup_type: Full, Incremental, Differential, defaults to Full (optional)
+        :param onedrive_backup_dir: The directory on OneDrive where you want to store the backup
+        :param backup_es: If True, Elasticsearch will be backed up, defaults to False (optional)
+        :param es_url: The URL of the Elasticsearch cluster
+        :param es_full: If True, the entire Elasticsearch database will be backed up. If False, only the specified index
+        will be backed up, defaults to False (optional)
+        :param es_index: The name of the index to backup
+        :param es_location: The location where the Elasticsearch backup will be stored
+        :param es_repo: The name of the repository to create
+        :param es_user: Elasticsearch user
+        :param es_password: Password for elasticsearch
+        :param es_remove_old: If you want to remove old backups from the elasticsearch repository, defaults to False
+        (optional)
+        :param es_restore: If you want to restore an elasticsearch backup, set this to True, defaults to False (optional)
+        :param sync_dirs: If True, the script will sync the src and dst directories, defaults to False (optional)
+        :param src: The source directory to sync from
+        :param dst: The destination directory for the sync
+        :param upload_to_onedrive: If True, the script will upload the backup files to OneDrive, defaults to False
+        (optional)
+        :param client_secret: The client secret you got from the app registration portal
+        :param client_id: The client ID of your app
+        :param tenant_id: The ID of the Azure Active Directory tenant that you want to use for authentication
+        :param scopes: The scopes for which you want to get an access token
+        :param tokens_file: The file where the tokens are stored
+        :param sync_hosts: List of hosts to sync
+        :param sync_remote_src: The source directory on the remote host
+        :param sync_remote_dst: The destination directory on the remote host
+        :param mysqldump_hosts: List of hosts to do mysqldump on
+        :param mysqldump_users: List of users for mysqldump
+        :param mysqldump_passwords: The password for the mysql user
+        :param mysqldump_databases: The databases to backup
+        :param mysqldump_dump_dest: The destination for the mysqldump
+        :param mysqldump_file_prefixes: The prefix for the mysqldump file
+        :param mysqldump_encrypt: If True, the mysqldump will be encrypted
+        :param mysqldump_encrypt_passwords: The password to encrypt the mysqldump file
+        :param mysqldump_one_drive_dirs: The directory on OneDrive where the mysqldump will be uploaded
+        :param dirs2backup_hosts: List of hosts to backup directories from
+        :param dirs2backup_paths: The directories to backup
+        :param dirs2backup_destinations: The destination directory for the backup
+        :param dirs2backup_encrypt: If True, the backup will be encrypted
+        :param dirs2backup_encrypt_passwords: The password to use for encrypting the backup
+        :param dirs2backup_backup_type: This is the type of backup to be done. It can be either 'Full' or 'Incremental'
+        :param dirs2backup_one_drive_dirs: The directory on OneDrive where the backup will be uploaded
         """
         # GENERAL
         #
-        self.noCopies = noCopies
-        self.backupMysql = backupMysql
-        self.backupDirs = backupDirs
-        self.syncDirs = syncDirs
-        self.uploadToOnedrive = uploadToOnedrive
-        self.logLevel = logLevel
+        if sync_hosts is None:
+            sync_hosts = []
+        if sync_remote_src is None:
+            sync_remote_src = []
+        if sync_remote_dst is None:
+            sync_remote_dst = []
+        if mysqldump_hosts is None:
+            mysqldump_hosts = []
+        if mysqldump_users is None:
+            mysqldump_users = []
+        if mysqldump_passwords is None:
+            mysqldump_passwords = []
+        if mysqldump_databases is None:
+            mysqldump_databases = []
+        if mysqldump_dump_dest is None:
+            mysqldump_dump_dest = []
+        if mysqldump_file_prefixes is None:
+            mysqldump_file_prefixes = []
+        if mysqldump_encrypt is None:
+            mysqldump_encrypt = []
+        if mysqldump_encrypt_passwords is None:
+            mysqldump_encrypt_passwords = []
+        if mysqldump_one_drive_dirs is None:
+            mysqldump_one_drive_dirs = []
+        if dirs2backup_hosts is None:
+            dirs2backup_hosts = []
+        if dirs2backup_paths is None:
+            dirs2backup_paths = []
+        if dirs2backup_destinations is None:
+            dirs2backup_destinations = []
+        if dirs2backup_encrypt is None:
+            dirs2backup_encrypt = []
+        if dirs2backup_encrypt_passwords is None:
+            dirs2backup_encrypt_passwords = []
+        if dirs2backup_backup_type is None:
+            dirs2backup_backup_type = []
+        if dirs2backup_one_drive_dirs is None:
+            dirs2backup_one_drive_dirs = []
+        self.no_copies = no_copies
+        self.backup_mysql = backup_mysql
+        self.backup_dirs = backup_dirs
+        self.sync_dirs = sync_dirs
+        self.upload_to_onedrive = upload_to_onedrive
+        self.log_level = log_level
+        self.remote_backup_dirs = remote_backup_dirs
+        self.remote_sync = remote_sync
+        self.remote_mysql = remote_mysql
 
         # MYSQL
         #
-        self.userMysql = userMysql
-        self.passwordMysql = passwordMysql
+        self.user_mysql = user_mysql
+        self.password_mysql = password_mysql
         self.database = database
-        self.dumpDestination = dumpDest
-        self.filePrefix = filePrefix
-        self.encryptMysql = encryptMysql
-        self.encryptMysqlPassword = encryptMysqlPassword
-        self.onedriveMysqlDir = onedriveMysqlDir
+        self.dump_destination = dump_dest
+        self.file_prefix = file_prefix
+        self.encrypt_mysql = encrypt_mysql
+        self.encrypt_mysql_password = encrypt_mysql_password
+        self.onedrive_mysql_dir = onedrive_mysql_dir
 
         # DIRS2BACKUP
         #
         self.paths = paths
         self.destination = destination
-        self.encryptDirs = encryptDirs
-        self.encryptDirsPassword = encryptDirsPassword
-        self.backupType = backupType
-        self.onedriveBackupDir = onedriveBackupDir
+        self.encrypt_dirs = encrypt_dirs
+        self.encrypt_dirs_password = encrypt_dirs_password
+        self.backup_type = backup_type
+        self.onedrive_backup_dir = onedrive_backup_dir
 
         # ELASTICSEARCH
         #
-        self.backupES = backupES
-        self.esUrl = esUrl
-        self.esFull = esFull
-        self.esIndex = esIndex
-        self.esLocation = esLocation
-        self.esRepo = esRepo
-        self.esUser = esUser
-        self.esPassword = esPassword
-        self.esRemoveOld = esRemoveOld
-        self.esRestore = esRestore
+        self.backup_es = backup_es
+        self.es_url = es_url
+        self.es_full = es_full
+        self.es_index = es_index
+        self.es_location = es_location
+        self.es_repo = es_repo
+        self.es_user = es_user
+        self.es_password = es_password
+        self.es_remove_old = es_remove_old
+        self.es_restore = es_restore
 
         # SYNC
         #
@@ -151,193 +227,202 @@ class ConfigurationData:
 
         # ONEDRIVE
         #
-        self.clientSecret = clientSecret
-        self.clientId = clientId
-        self.tenantId = tenantId
+        self.client_secret = client_secret
+        self.client_id = client_id
+        self.tenant_id = tenant_id
         self.scopes = scopes
-        self.tokensFile = tokensFile
+        self.tokens_file = tokens_file
 
         # SYNC REMOTE
         #
-        self.syncHosts = syncHosts
-        self.syncRemoteSrc = syncRemoteSrc
-        self.syncRemoteDst = syncRemoteDst
+        self.sync_hosts = sync_hosts
+        self.sync_remote_src = sync_remote_src
+        self.sync_remote_dst = sync_remote_dst
 
         # MYSQLDUMP REMOTE
         #
-        self.mysqldumpHosts = mysqldumpHosts
-        self.mysqldumpUsers = mysqldumpUsers
-        self.mysqldumpPasswords = mysqldumpPasswords
-        self.mysqldumpDatabases = mysqldumpDatabases
-        self.mysqldumpDumpDest = mysqldumpDumpDest
-        self.mysqldumpFilePrefixes = mysqldumpFilePrefixes
-        self.mysqldumpEncrypt = mysqldumpEncrypt
-        self.mysqldumpEncryptPasswords = mysqldumpEncryptPasswords
-        self.mysqldumpOneDriveDirs = mysqldumpOneDriveDirs
+        self.mysqldump_hosts = mysqldump_hosts
+        self.mysqldump_users = mysqldump_users
+        self.mysqldump_passwords = mysqldump_passwords
+        self.mysqldump_databases = mysqldump_databases
+        self.mysqldump_dump_dest = mysqldump_dump_dest
+        self.mysqldump_file_prefixes = mysqldump_file_prefixes
+        self.mysqldump_encrypt = mysqldump_encrypt
+        self.mysqldump_encrypt_passwords = mysqldump_encrypt_passwords
+        self.mysqldump_one_drive_dirs = mysqldump_one_drive_dirs
 
         # DIRS2BACKUP REMOTE
         #
-        self.dirs2backupHosts = dirs2backupHosts
-        self.dirs2backupPaths = dirs2backupPaths
-        self.dirs2backupDestinations = dirs2backupDestinations
-        self.dirs2backupEncrypt = dirs2backupEncrypt
-        self.dirs2backupEncryptPasswords = dirs2backupEncryptPasswords
-        self.dirs2backupBackupType = dirs2backupBackupType
-        self.dirs2backupOneDriveDirs = dirs2backupOneDriveDirs
+        self.dirs2backup_hosts = dirs2backup_hosts
+        self.dirs2backup_paths = dirs2backup_paths
+        self.dirs2backup_destinations = dirs2backup_destinations
+        self.dirs2backup_encrypt = dirs2backup_encrypt
+        self.dirs2backup_encrypt_passwords = dirs2backup_encrypt_passwords
+        self.dirs2backup_backup_type = dirs2backup_backup_type
+        self.dirs2backup_one_drive_dirs = dirs2backup_one_drive_dirs
 
-    def LoadData(self, path):
+    def load_data(self, path):
         """Load data from file at path provided as argument of this method
 
         Args:
             path (string): absolute or relative path to the configuration file
         """
         print("\nConfig file: " + path)
-        if os.path.exists(path) == False:
+        if not os.path.exists(path):
             print("ERROR: configuration file '" + path + "' doesn't exists!\n")
             print("Exiting the application...")
             quit()
-        configParser = configparser.RawConfigParser()
-        configParser.read(path)
-        for s in configParser.get('general', 'no_copies', fallback="0").split():
+        config_parser = configparser.RawConfigParser()
+        config_parser.read(path)
+        for s in config_parser.get('general', 'no_copies', fallback="0").split():
             if s.isdigit():
-                self.noCopies = s
-        if not self.noCopies:
-            self.noCopies = 1
+                self.no_copies = s
+        if not self.no_copies:
+            self.no_copies = 1
 
         # LOG LEVEL
         #
-        self.logLevel = configParser.get(
+        self.log_level = config_parser.get(
             'general', 'log_level', fallback='INFO')
+        self.remote_mysql = config_parser.get(
+            'general', 'remote_mysql', fallback='False')
+        self.remote_sync = config_parser.get(
+            'general', 'remote_sync', fallback='False')
+        self.remote_backup_dirs = config_parser.get(
+            'general', 'remote_backup_dirs', fallback='False')
 
         # MYSQL
         #
-        self.backupMysql = configParser.get(
+        self.backup_mysql = config_parser.get(
             'general', 'backup_mysql', fallback='False')
-        self.userMysql = configParser.get('mysql', 'user', fallback=None)
-        self.passwordMysql = configParser.get(
+        self.user_mysql = config_parser.get('mysql', 'user', fallback=None)
+        self.password_mysql = config_parser.get(
             'mysql', 'password', fallback=None)
-        self.database = configParser.get('mysql', 'database', fallback=None)
-        self.dumpDestination = configParser.get(
+        self.database = config_parser.get('mysql', 'database', fallback=None)
+        self.dump_destination = config_parser.get(
             'mysql', 'destination', fallback="")
-        self.filePrefix = configParser.get(
+        self.file_prefix = config_parser.get(
             'mysql', 'file_prefix', fallback=None)
-        self.encryptMysql = configParser.get(
+        self.encrypt_mysql = config_parser.get(
             'mysql', 'encrypt', fallback=False)
-        self.encryptMysqlPassword = configParser.get(
+        self.encrypt_mysql_password = config_parser.get(
             'mysql', 'enc_pass', fallback=None)
-        self.onedriveMysqlDir = configParser.get(
+        self.onedrive_mysql_dir = config_parser.get(
             'mysql', 'drive_dir', fallback=None)
 
         # DIRS2BACKUP
         #
-        self.backupDirs = configParser.get(
+        self.backup_dirs = config_parser.get(
             'general', 'backup_dirs', fallback=False)
-        self.paths = configParser.get(
+        self.paths = config_parser.get(
             'dirs2backup', 'path', fallback="").split(';')
-        self.destination = configParser.get('dirs2backup',
-                                            'destination', fallback="").split(';')
-        self.encryptDirs = configParser.get(
+        self.destination = config_parser.get('dirs2backup',
+                                             'destination', fallback="").split(';')
+        self.encrypt_dirs = config_parser.get(
             'dirs2backup', 'encrypt', fallback=False)
-        self.encryptDirsPassword = configParser.get(
+        self.encrypt_dirs_password = config_parser.get(
             'dirs2backup', 'enc_pass', fallback=None)
-        self.backupType = configParser.get(
+        self.backup_type = config_parser.get(
             'dirs2backup', 'backup_type', fallback='fUll')
-        self.onedriveBackupDir = configParser.get(
+        self.onedrive_backup_dir = config_parser.get(
             'dirs2backup', 'drive_dir', fallback=None)
         # ELASTICSEARCH
         #
-        self.backupES = configParser.get(
+        self.backup_es = config_parser.get(
             'general', 'backup_es', fallback=False)
-        self.esUrl = configParser.get(
+        self.es_url = config_parser.get(
             'elasticsearch', 'es_url', fallback="127.0.0.1:9200")
-        self.esFull = configParser.get('elasticsearch', 'full', fallback=False)
-        self.esIndex = configParser.get('elasticsearch', 'index', fallback="")
-        self.esLocation = configParser.get(
+        self.es_full = config_parser.get('elasticsearch', 'full', fallback=False)
+        self.es_index = config_parser.get('elasticsearch', 'index', fallback="")
+        self.es_location = config_parser.get(
             'elasticsearch', 'location', fallback="/tmp")
-        self.esRepo = configParser.get('elasticsearch', 'repo', fallback="")
-        self.esUser = configParser.get(
+        self.es_repo = config_parser.get('elasticsearch', 'repo', fallback="")
+        self.es_user = config_parser.get(
             'elasticsearch', 'user', fallback="elastic")
-        self.esPassword = configParser.get(
+        self.es_password = config_parser.get(
             'elasticsearch', 'password', fallback="")
-        self.esRemoveOld = configParser.get(
+        self.es_remove_old = config_parser.get(
             'elasticsearch', 'remove_old', fallback=False)
-        self.esRestore = configParser.get(
+        self.es_restore = config_parser.get(
             'elasticsearch', 'restore', fallback=False)
 
         # SYNC
         #
-        self.syncDirs = configParser.get(
+        self.sync_dirs = config_parser.get(
             'general', 'sync_dirs', fallback=False)
-        self.src = configParser.get('sync', 'src', fallback=None)
-        self.dst = configParser.get('sync', 'dst', fallback=None)
+        self.src = config_parser.get('sync', 'src', fallback=None)
+        self.dst = config_parser.get('sync', 'dst', fallback=None)
 
         # ONEDRIVE
         #
-        self.uploadToOnedrive = configParser.get(
+        self.upload_to_onedrive = config_parser.get(
             'general', 'up2onedrive', fallback=False)
-        self.clientSecret = configParser.get(
+        self.client_secret = config_parser.get(
             'onedrive', 'client_secret', fallback=None)
-        self.clientId = configParser.get(
+        self.client_id = config_parser.get(
             'onedrive', 'client_id', fallback=None)
-        self.tenantId = configParser.get(
+        self.tenant_id = config_parser.get(
             'onedrive', 'tenant_id', fallback=None)
-        self.scopes = configParser.get(
+        self.scopes = config_parser.get(
             'onedrive', 'scopes', fallback="").split(';')
-        self.tokensFile = configParser.get(
-            'onedrive', 'tokensFile', fallback='./tokens.json')
+        self.tokens_file = config_parser.get(
+            'onedrive', 'tokens_file', fallback='./tokens.json')
 
         # SYNC REMOTE
         #
-        self.syncHosts = configParser.get(
+        self.sync_hosts = config_parser.get(
             'sync_remote', 'hosts', fallback=[]).split(';')
-        self.syncRemoteSrc = configParser.get(
+        self.sync_remote_src = config_parser.get(
             'sync_remote', 'src', fallback=[]).split(';')
-        self.syncRemoteDst = configParser.get(
+        self.sync_remote_dst = config_parser.get(
             'sync_remote', 'dst', fallback=[]).split(';')
 
         # MYSQLDUMP REMOTE
         #
-        self.mysqldumpHosts = configParser.get(
+        self.mysqldump_hosts = config_parser.get(
             'mysqldump_remote', 'hosts', fallback=[]).split(';')
-        self.mysqldumpUsers = configParser.get(
+        self.mysqldump_users = config_parser.get(
             'mysqldump_remote', 'user', fallback=[]).split(';')
-        self.mysqldumpPasswords = configParser.get(
+        self.mysqldump_passwords = config_parser.get(
             'mysqldump_remote', 'password', fallback=[]).split(';')
-        self.mysqldumpDatabases = configParser.get(
+        self.mysqldump_databases = config_parser.get(
             'mysqldump_remote', 'database', fallback=[]).split(';')
-        self.mysqldumpDumpDest = configParser.get(
+        self.mysqldump_dump_dest = config_parser.get(
             'mysqldump_remote', 'destination', fallback=[]).split(';')
-        self.mysqldumpFilePrefixes = configParser.get(
+        self.mysqldump_file_prefixes = config_parser.get(
             'mysqldump_remote', 'file_prefix', fallback=[]).split(';')
-        self.mysqldumpEncrypt = configParser.get(
+        self.mysqldump_encrypt = config_parser.get(
             'mysqldump_remote', 'encrypt', fallback=[]).split(';')
-        self.mysqldumpEncryptPasswords = configParser.get(
+        self.mysqldump_encrypt_passwords = config_parser.get(
             'mysqldump_remote', 'enc_pass', fallback=[]).split(';')
-        self.mysqldumpOneDriveDirs = configParser.get(
+        self.mysqldump_one_drive_dirs = config_parser.get(
             'mysqldump_remote', 'drive_dir', fallback=[]).split(';')
-        
+
         # DIRS2BACKUP REMOTE
         #
-        self.dirs2backupHosts = configParser.get('dirs2backup_remote','hosts',fallback=[]).split(';')
-        self.dirs2backupPaths = configParser.get('dirs2backup_remote','path',fallback=[]).split(';')
-        self.dirs2backupDestinations = configParser.get('dirs2backup_remote','destination',fallback=[]).split(';')
-        self.dirs2backupEncrypt = configParser.get('dirs2backup_remote','encrypt',fallback=[]).split(';')
-        self.dirs2backupEncryptPasswords = configParser.get('dirs2backup_remote','enc_pass',fallback=[]).split(';')
-        self.dirs2backupBackupType = configParser.get('dirs2backup_remote','backup_type',fallback=[]).split(';')
-        self.dirs2backupOneDriveDirs = configParser.get('dirs2backup_remote','drive_dir',fallback=[]).split(';')
+        self.dirs2backup_hosts = config_parser.get('dirs2backup_remote', 'hosts', fallback=[]).split(';')
+        self.dirs2backup_paths = config_parser.get('dirs2backup_remote', 'path', fallback=[]).split(';')
+        self.dirs2backup_destinations = config_parser.get('dirs2backup_remote', 'destination', fallback=[]).split(';')
+        self.dirs2backup_encrypt = config_parser.get('dirs2backup_remote', 'encrypt', fallback=[]).split(';')
+        self.dirs2backup_encrypt_passwords = config_parser.get('dirs2backup_remote', 'enc_pass', fallback=[]).split(';')
+        self.dirs2backup_backup_type = config_parser.get('dirs2backup_remote', 'backup_type', fallback=[]).split(';')
+        self.dirs2backup_one_drive_dirs = config_parser.get('dirs2backup_remote', 'drive_dir', fallback=[]).split(';')
 
         print("\nConfiguration data loaded successfully!\n")
 
-    def GetAllFormated(self):
-        formated = """
+    def get_all_formatted(self):
+        formatted = """
         [general]
-        no_copies   = {0}
-        backup_mysql= {1}
-        backup_dirs = {2}
-        backup_es   = {3}
-        sync_dir    = {4}
-        up2onedrive = {5}
-        log_level   = {6}
+        no_copies           = {0}
+        backup_mysql        = {1}
+        backup_dirs         = {2}
+        backup_es           = {3}
+        sync_dir            = {4}
+        up2onedrive         = {5}
+        remote_sync         = {46}
+        remote_mysql        = {47}
+        remote_backup_dirs  = {48}
+        log_level           = {6}
 
         [mysql]
         user        = {7}
@@ -375,7 +460,7 @@ class ConfigurationData:
         client_id       = {26}
         tenant_id       = {27}
         scopes          = {28}
-        tokensFile      = {29}
+        tokens_file      = {29}
         
         [sync_remote]
         hosts       = {30}
@@ -402,51 +487,54 @@ class ConfigurationData:
         backup_type		= {44}
         driveDir        = {45}
         
-        """.format(self.noCopies,
-                   self.backupMysql,
-                   self.backupDirs,
-                   self.backupES,
-                   self.syncDirs,
-                   self.uploadToOnedrive,
-                   self.logLevel,
-                   self.userMysql,
+        """.format(self.no_copies,
+                   self.backup_mysql,
+                   self.backup_dirs,
+                   self.backup_es,
+                   self.sync_dirs,
+                   self.upload_to_onedrive,
+                   self.log_level,
+                   self.user_mysql,
                    self.database,
-                   self.dumpDestination,
-                   self.filePrefix,
-                   self.encryptMysql,
-                   self.onedriveMysqlDir,
+                   self.dump_destination,
+                   self.file_prefix,
+                   self.encrypt_mysql,
+                   self.onedrive_mysql_dir,
                    self.paths,
                    self.destination,
-                   self.encryptDirs,
-                   self.backupType,
-                   self.onedriveBackupDir,
-                   self.esUrl,
-                   self.esIndex,
-                   self.esLocation,
-                   self.esRepo,
-                   self.esUser,
-                   self.esRemoveOld,
+                   self.encrypt_dirs,
+                   self.backup_type,
+                   self.onedrive_backup_dir,
+                   self.es_url,
+                   self.es_index,
+                   self.es_location,
+                   self.es_repo,
+                   self.es_user,
+                   self.es_remove_old,
                    self.src,
                    self.dst,
-                   self.clientId,
-                   self.tenantId,
+                   self.client_id,
+                   self.tenant_id,
                    self.scopes,
-                   self.tokensFile,
-                   self.syncHosts,
-                   self.syncRemoteSrc,
-                   self.syncRemoteDst,
-                   self.mysqldumpHosts,
-                   self.mysqldumpUsers,
-                   self.mysqldumpDatabases,
-                   self.mysqldumpDumpDest,
-                   self.mysqldumpFilePrefixes,
-                   self.mysqldumpEncrypt,
-                   self.mysqldumpOneDriveDirs,
-                   self.dirs2backupHosts,
-                   self.dirs2backupPaths,
-                   self.dirs2backupDestinations,
-                   self.dirs2backupEncrypt,
-                   self.dirs2backupBackupType,
-                   self.dirs2backupOneDriveDirs,
+                   self.tokens_file,
+                   self.sync_hosts,
+                   self.sync_remote_src,
+                   self.sync_remote_dst,
+                   self.mysqldump_hosts,
+                   self.mysqldump_users,
+                   self.mysqldump_databases,
+                   self.mysqldump_dump_dest,
+                   self.mysqldump_file_prefixes,
+                   self.mysqldump_encrypt,
+                   self.mysqldump_one_drive_dirs,
+                   self.dirs2backup_hosts,
+                   self.dirs2backup_paths,
+                   self.dirs2backup_destinations,
+                   self.dirs2backup_encrypt,
+                   self.dirs2backup_backup_type,
+                   self.dirs2backup_one_drive_dirs,
+                   self.remote_sync,
+                   self.remote_mysql,
+                   self.remote_backup_dirs
                    )
-        return formated
+        return formatted
