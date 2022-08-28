@@ -39,7 +39,7 @@ def Targz(paths, destination, encrypt, encPass, noCopies=3, oneDrive=None, oneDr
             return
 
         logger.info("Directory is compressed. File :" +
-                    fileName + " succesfully created.")
+                    fileName + " successfully created.")
         end = timer()
         logger.info("Time took for targz :" +
                     str(timedelta(seconds=end - start)))
@@ -48,10 +48,12 @@ def Targz(paths, destination, encrypt, encPass, noCopies=3, oneDrive=None, oneDr
             fileName = file_management.EncryptData(
                 fileName, encPass)
             fn = fn + '.enc'
-        oneDrive.UploadFile(oneDriveDir=oneDriveDir,
-                            localDir=destination[0], fileName=fn)
-        oneDrive.RemoveOldFiles(
-            fileName=filePrefix, oneDriveDir=oneDriveDir, encrypt=encrypt, noCopies=noCopies)
+
+        if oneDrive is not None:
+            oneDrive.UploadFile(oneDriveDir=oneDriveDir,
+                                localDir=destination[0], fileName=fn)
+            oneDrive.RemoveOldFiles(
+                fileName=filePrefix, oneDriveDir=oneDriveDir, encrypt=encrypt, noCopies=noCopies)
         if len(destination) > 1:
             for i in range(0, len(destination)):
                 if i != 0:
@@ -90,7 +92,7 @@ def TargzIncremental(paths, destination, encrypt, encPass, oneDrive=None, oneDri
                          + out+"\tStandard Error: "+err)
             return
         logger.info("Directory is compressed. File :" +
-                    fileName + " succesfully created.")
+                    fileName + " successfully created.")
         end = timer()
         logger.info("Time took for targz :" +
                     str(timedelta(seconds=end - start)))
@@ -99,10 +101,12 @@ def TargzIncremental(paths, destination, encrypt, encPass, oneDrive=None, oneDri
             fileName = file_management.EncryptData(
                 fileName, encPass)
             fn = fn + '.enc'
-        oneDrive.UploadFile(oneDriveDir=oneDriveDir,
-                            localDir=destination[0], fileName=fn)
-        oneDrive.UploadFile(oneDriveDir=oneDriveDir,
-                            localDir=destination[0], fileName=filePrefix + '.snap')
+
+        if oneDrive is not None:
+            oneDrive.UploadFile(oneDriveDir=oneDriveDir,
+                                localDir=destination[0], fileName=fn)
+            oneDrive.UploadFile(oneDriveDir=oneDriveDir,
+                                localDir=destination[0], fileName=filePrefix + '.snap')
         if len(destination) > 1:
             for i in range(1, len(destination)):
                 file_management.Copy(fileName, destination[i], fn)
@@ -123,7 +127,7 @@ def TargzDifferential(paths, destination, encrypt, encPass, oneDrive=None, oneDr
         )
         if filePrefix[0] == '-':
             filePrefix = filePrefix[1:len(filePrefix)]
-        filePrefix = filePrefix + "inc"
+        filePrefix = filePrefix + "diff"
         fileName = filePrefix + '-' + utils.GetCurrDateTime() + '.tar.gz'
         fn = fileName
         fileName = destination[0] + '/' + fileName
@@ -141,7 +145,7 @@ def TargzDifferential(paths, destination, encrypt, encPass, oneDrive=None, oneDr
                          + out+"\tStandard Error: "+err)
             return
         logger.info("Directory is compressed. File :" +
-                    fileName + " succesfully created.")
+                    fileName + " successfully created.")
 
         if not exists(snapFileBak):
             utils.Run("cp "+snapFile+" "+snapFileBak)
@@ -156,8 +160,16 @@ def TargzDifferential(paths, destination, encrypt, encPass, oneDrive=None, oneDr
             fileName = file_management.EncryptData(
                 fileName, encPass)
             fn = fn + '.enc'
-        oneDrive.UploadFile(oneDriveDir=oneDriveDir,
-                            localDir=destination[0], fileName=fn)
+
+        if oneDrive is not None:
+            oneDrive.UploadFile(oneDriveDir=oneDriveDir,
+                                localDir=destination[0],  fileName=fn)
+            oneDrive.UploadFile(oneDriveDir=oneDriveDir,
+                                localDir=destination[0], fileName=filePrefix + '.snap')
+            oneDrive.UploadFile(oneDriveDir=oneDriveDir,
+                                localDir=destination[0], fileName=filePrefix + '.snap.bak')
+            oneDrive.KeepOnlyOldestAndNewest(
+                fileName=filePrefix, oneDriveDir=oneDriveDir, encrypt=encrypt)
 
         if len(destination) > 1:
             for i in range(0, len(destination)):

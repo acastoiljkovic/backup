@@ -27,12 +27,12 @@ class OneDrive:
             removing old files from OneDrive
 
         Args:
-            clientSecret (string): Client secret gained form Microsoft applicaiton
+            clientSecret (string): Client secret gained form Microsoft application
             clientID (string): Client ID gained from Microsoft application
             scopes (array): Array of Microsoft scopes ie. ['User.Read']
             tokens (json, optional): JSON object that contains access and refres tokens. Defaults to None.
             tokensFile (str, optional): File where JSON tokes will be stored. Defaults to './tokens.json'.
-            tenantId (string, optional): Micriostf Tenant ID where your application is beeing deployd.
+            tenantId (string, optional): Microsoft Tenant ID where your application is being deployd.
                                          If you are using personal account backup system will use default "common".
         """
         self.clientSecret = clientSecret
@@ -87,16 +87,16 @@ class OneDrive:
         return authorization_url.replace(' ', '%20')
 
     def CheckTokens(self):
-        if self.tokens != None:
-            if self.tokens['access_token'] != None:
+        if self.tokens is not None:
+            if self.tokens['access_token'] is not None:
                 logger.debug('Access token exists')
-                if self.tokens['refresh_token'] != None:
+                if self.tokens['refresh_token'] is not None:
                     logger.debug('Refresh token exists')
                 return True
         return False
 
-    def GetTokens(self, redirectionUrl):
-        code = parse_qs(urlparse(redirectionUrl).query)['code'][0]
+    def GetTokens(self, redirection_url):
+        code = parse_qs(urlparse(redirection_url).query)['code'][0]
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -123,7 +123,7 @@ class OneDrive:
             with open(self.tokensFile, 'w') as f:
                 logger.debug("Opening file: "+self.tokensFile)
                 f.write(json.dumps(self.tokens))
-                logger.debug("Tokens are succesfully writed to a file")
+                logger.debug("Tokens are successfully written to a file")
                 f.close()
         except Exception as e:
             logger.error("Error while writing tokens to a file "+str(e))
@@ -163,7 +163,7 @@ class OneDrive:
                         self.CreateAuthorizationUrl())
             logger.info("Insert URL where you been redirected:")
             redirectionUrl = input()
-            self.GetTokens(redirectionUrl=redirectionUrl)
+            self.GetTokens(redirection_url=redirectionUrl)
 
     def UploadFile(self, oneDriveDir="", localDir=".", fileName="bck"):
         if oneDriveDir[0] == '/':
@@ -218,7 +218,7 @@ class OneDrive:
                 headers=headers,
                 json=request_body
             )
-            if response.status_code >= 200 and response.status_code < 300:
+            if 200 <= response.status_code < 300:
                 logger.debug(response.json())
                 return response
             elif response.status_code == 401:
@@ -275,10 +275,10 @@ class OneDrive:
         except Exception as e:
             logger.error(str(e))
         end = timer()
-        logger.info("Successfully uploadde file")
+        logger.info("Successfully uploaded file")
         logger.debug("Terminating upload session from OneDrive")
         response = requests.delete(url)
-        logger.debug("Session successfuly terminated")
+        logger.debug("Session successfully terminated")
         logger.info("Time took for uploading: " +
                     str(timedelta(seconds=end - start)))
 
@@ -345,7 +345,7 @@ class OneDrive:
                 headers=headers
             )
             logger.debug(response.json())
-            if response.status_code >= 200 and response.status_code < 300:
+            if 200 <= response.status_code < 300:
                 for i in response.json()["value"]:
                     if fileName in str(i["name"]):
                         if str(encrypt).upper() == "TRUE":
@@ -384,7 +384,7 @@ class OneDrive:
                 deleteUrl,
                 headers=headers
             )
-            if response.status_code >= 200 and response.status_code < 300:
+            if 200 <= response.status_code < 300:
                 logger.info(
                     "File: "+oneDriveElement['name']+" is successfully removed!")
             elif response.status_code == 401:
@@ -393,12 +393,12 @@ class OneDrive:
                 self.__RemoveFile(oneDriveElement)
             else:
                 logger.error("Error wile deleting file: " +
-                             oneDriveElement['name']+" , with statsu code: " +
+                             oneDriveElement['name']+" , with status code: " +
                              str(response.status_code))
         except Exception as e:
             logger.error(str(e))
 
-    def KeppOnlyNewestAndOldest(self, fileName, oneDriveDir, encrypt):
+    def KeepOnlyOldestAndNewest(self, fileName, oneDriveDir, encrypt):
         if oneDriveDir[0] == '/':
             oneDriveDir = oneDriveDir[1:]
         fileName = fileName.strip()
@@ -414,10 +414,10 @@ class OneDrive:
             oldest = None
             rem_list = []
             for i in list_of_files:
-                if i["name"].endswith(".snap"):
+                if i["name"].endswith(".snap") or i["name"].endswith(".snap.bak"):
                     pass
                 else:
-                    if newest != None and oldest != None:
+                    if newest is not None and oldest is not None:
                         if newest["lastModifiedDateTime"] > i["lastModifiedDateTime"]:
                             if oldest["lastModifiedDateTime"] < i["lastModifiedDateTime"]:
                                 rem_list.append(i)
@@ -441,8 +441,7 @@ class OneDrive:
                          oldest["lastModifiedDateTime"])
             logger.debug("Removing list: ")
             for j in rem_list:
-                logger.debug("File name: "+j["name"]+" Last Modified Date Time: " +
-                         j["lastModifiedDateTime"])
+                self.__RemoveFile(j)
 
         except Exception as e:
             logger.error(str(e))
