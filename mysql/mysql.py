@@ -17,11 +17,15 @@ def mysqldump(database, user, password, dest, encrypt, enc_password, no_copies, 
                          ' --single-transaction --quick --lock-tables=false ' +
                          database + ' > "' +
                          dest + '/' + file_name + '"')
+        mysqldump_cmd_log = ('/usr/bin/mysqldump -u ' + user +
+                             ' -p *********** --single-transaction --quick --lock-tables=false ' +
+                             database + ' > "' +
+                             dest + '/' + file_name + '"')
         logger.info("---------------------------------------")
         logger.info("start mysqldump")
         logger.info("---------------------------------------")
         start = timer()
-        code, out, err = utils.run(mysqldump_cmd)
+        code, out, err = utils.run(mysqldump_cmd, mysqldump_cmd_log)
         end = timer()
         if code > 0:
             logger.error("Mysqldump failed with status code: " + str(code) + " Standard Error: " + err +
@@ -36,11 +40,12 @@ def mysqldump(database, user, password, dest, encrypt, enc_password, no_copies, 
                     file_name=dest + '/' + file_name,
                     password=enc_password
                 )
+                file_name = file_name + '.enc'
 
             file_management.rmold(
                 dir=dest,
                 name='mysqldump_' + database,
-                noCopies=no_copies,
+                no_copies=no_copies,
                 encrypt=encrypt
             )
 
@@ -70,9 +75,13 @@ def mysqldump_remote(hosts, databases, users, passwords, destinations, encrypts,
                              ' --single-transaction --quick --lock-tables=false ' +
                              databases[db_cnt] + ' > "' +
                              destinations[dst_cnt] + '/' + file_name + '"')
+            mysqldump_cmd_log = ('/usr/bin/mysqldump -u ' + users[user_cnt] +
+                                 ' -p ************ --single-transaction --quick --lock-tables=false ' +
+                                 databases[db_cnt] + ' > "' +
+                                 destinations[dst_cnt] + '/' + file_name + '"')
 
             start = timer()
-            code, out, err = utils.run_remote(mysqldump_cmd,host)
+            code, out, err = utils.run_remote(mysqldump_cmd, host, mysqldump_cmd_log)
             end = timer()
             if code > 0:
                 logger.error("Mysqldump failed with status code: " + str(code) + " Standard Error: " + err +
@@ -87,12 +96,13 @@ def mysqldump_remote(hosts, databases, users, passwords, destinations, encrypts,
                         file_name=destinations[dst_cnt] + '/' + file_name,
                         password=enc_passwords[enc_pw_cnt]
                     )
+                    file_name = file_name + '.enc'
 
                 file_management.rmold_remote(
                     host=host,
                     dir=destinations[dst_cnt],
                     name='mysqldump_' + databases[db_cnt],
-                    noCopies=no_copies,
+                    no_copies=no_copies,
                     encrypt=encrypts[enc_cnt]
                 )
 
@@ -100,22 +110,23 @@ def mysqldump_remote(hosts, databases, users, passwords, destinations, encrypts,
                 one_drive.upload_file(one_drive_dir=one_drive_dir[odd_cnt],
                                       local_dir=destinations[dst_cnt], file_name=file_name)
                 one_drive.remove_old_files(
-                    file_name='mysqldump_' + databases[db_cnt], one_drive_dir=one_drive_dir[odd_cnt], encrypt=encrypts[enc_cnt],
+                    file_name='mysqldump_' + databases[db_cnt], one_drive_dir=one_drive_dir[odd_cnt],
+                    encrypt=encrypts[enc_cnt],
                     no_copies=no_copies)
 
             if len(hosts) == len(databases):
                 db_cnt += 1
-            if len(hosts) == len(users) :
+            if len(hosts) == len(users):
                 user_cnt += 1
-            if len(hosts) == len(passwords) :
+            if len(hosts) == len(passwords):
                 pw_cnt += 1
-            if len(hosts) == len(destinations) :
+            if len(hosts) == len(destinations):
                 dst_cnt += 1
-            if len(hosts) == len(encrypts) :
+            if len(hosts) == len(encrypts):
                 enc_cnt += 1
-            if len(hosts) == len(enc_passwords) :
+            if len(hosts) == len(enc_passwords):
                 enc_pw_cnt += 1
-            if len(hosts) == len(one_drive_dir) :
+            if len(hosts) == len(one_drive_dir):
                 odd_cnt += 1
 
     except Exception as e:

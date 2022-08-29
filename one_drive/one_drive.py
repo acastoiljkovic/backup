@@ -43,7 +43,7 @@ class OneDrive:
         self.__OAUTH2_BASE_URL = self.__LOGIN_BASE_URL + "/" + tenant_id + "/oauth2/v2.0"
         self.__AUTHORIZE_BASE_URL = self.__OAUTH2_BASE_URL + "/authorize"
         self.__TOKENS_BASE_URL = self.__OAUTH2_BASE_URL + "/token"
-        # velicina fragmenta trab da bude umnozak 320KB, trenutno je 31.25MB
+        # size of fragment should be divisible with 320KB, currently it's 31.25MB
         self.__CHUNK_SIZE = 32768000
         self.tokens = tokens
         self.tokens_file = tokens_file
@@ -92,7 +92,26 @@ class OneDrive:
                 logger.debug('Access token exists')
                 if self.tokens['refresh_token'] is not None:
                     logger.debug('Refresh token exists')
+                    get_list_url = self.__GRAPH_API_URL + f'/me/drive/items/root/children'
+                    headers = {
+                        'Authorization': 'Bearer ' + self.tokens['access_token'],
+                    }
+                    response = requests.get(
+                        get_list_url,
+                        headers=headers
+                    )
+                    logger.debug(response.json())
+                    if 200 <= response.status_code < 300:
+                        logger.info("Tokens are valid!")
+                    elif response.status_code == 401:
+                        logger.warning("Tokens expired !")
+                        self.renew_tokens()
+                    else:
+                        logger.error("Unexpected error: " + str(response.content))
                 return True
+        else:
+            self.__perform_login()
+
         return False
 
     def get_tokens(self, redirection_url):
@@ -171,6 +190,7 @@ class OneDrive:
         if self.tokens is None:
             self.__perform_login()
         else:
+            self.check_tokens()
             try:
                 upload_url = self.__get_upload_url(
                     dir=one_drive_dir, file_name=file_name)
@@ -234,7 +254,7 @@ class OneDrive:
             logger.debug("Response code: " + str(response.status_code))
 
     def __upload_to_one_drive(self, url, file):
-        f = open(file)
+        f = open(file, 'rb')
         file_size = os.path.getsize(file)
         uploaded_bytes = 0
         start = timer()
@@ -279,9 +299,13 @@ class OneDrive:
         logger.info("Successfully uploaded file")
         logger.debug("Terminating upload session from OneDrive")
         response = requests.delete(url)
-        logger.debug("Session successfully terminated")
-        logger.info("Time took for uploading: " +
-                    str(timedelta(seconds=end - start)))
+        if 200 <= response.status_code < 300:
+            logger.debug("Session successfully terminated")
+            logger.info("Time took for uploading: " +
+                        str(timedelta(seconds=end - start)))
+        else:
+            logger.warning("Session is terminated with status code: " +
+                           str(response.status_code) + "\nand content: " + response.content)
 
     def remove_old_files(self, file_name, one_drive_dir, encrypt, no_copies=3):
         if one_drive_dir[0] == '/':
@@ -338,8 +362,7 @@ class OneDrive:
                 'Authorization': 'Bearer ' + self.tokens['access_token'],
             }
 
-            get_list_url = self.__GRAPH_API_URL + f'/me/drive/items/root:/' + \
-                         one_drive_dir + ':/children'
+            get_list_url = self.__GRAPH_API_URL + f'/me/drive/items/root:/' + one_drive_dir + ':/children'
             logger.debug("URL for listing directory: " + str(get_list_url))
             response = requests.get(
                 get_list_url,
@@ -373,27 +396,26 @@ class OneDrive:
 
         return list_of_files
 
-    def __remove_file(self, oneDriveElement):
+    def __remove_file(self, one_drive_element):
         try:
             headers = {
                 'Authorization': 'Bearer ' + self.tokens['access_token'],
             }
-            delete_url = self.__GRAPH_API_URL + \
-                         f'/me/drive/items/' + oneDriveElement['id']
+            delete_url = self.__GRAPH_API_URL + f'/me/drive/items/' + one_drive_element['id']
             response = requests.delete(
                 delete_url,
                 headers=headers
             )
             if 200 <= response.status_code < 300:
                 logger.info(
-                    "File: " + oneDriveElement['name'] + " is successfully removed!")
+                    "File: " + one_drive_element['name'] + " is successfully removed!")
             elif response.status_code == 401:
                 logger.warning("Access token is expired, renewing it! ")
                 self.renew_tokens()
-                self.__remove_file(oneDriveElement)
+                self.__remove_file(one_drive_element)
             else:
                 logger.error("Error wile deleting file: " +
-                             oneDriveElement['name'] + " , with status code: " +
+                             one_drive_element['name'] + " , with status code: " +
                              str(response.status_code))
         except Exception as e:
             logger.error(str(e))

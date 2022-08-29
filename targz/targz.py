@@ -10,28 +10,28 @@ from timeit import default_timer as timer
 logger = logging.getLogger("backup_logger")
 
 
-def Targz(paths, destination, encrypt, encPass, noCopies=3, oneDrive=None, oneDriveDir=None):
+def targz(paths, destination, encrypt, enc_pass, no_copies=3, one_drive=None, one_drive_dir=None):
     for dir2compress in paths:
         logger.info("---------------------------------------")
         logger.info("start targz")
         logger.info("---------------------------------------")
         logger.info("Targz provided directories :" +
                     dir2compress)
-        filePrefix = dir2compress.replace(
+        file_prefix = dir2compress.replace(
             '/',
             '-',
         )
-        if filePrefix[0] == '-':
-            filePrefix = filePrefix[1:len(filePrefix)]
-        filePrefix = filePrefix + "full"
-        fileName = filePrefix + '-' + utils.get_curr_date_time() + '.tar.gz'
-        fn = fileName
-        fileName = destination[0] + '/' + fileName
-        targzCmd = (
-            'tar -czvf ' + fileName + ' --absolute-names ' + dir2compress
+        if file_prefix[0] == '-':
+            file_prefix = file_prefix[1:len(file_prefix)]
+        file_prefix = file_prefix + "full"
+        file_name = file_prefix + '-' + utils.get_curr_date_time() + '.tar.gz'
+        fn = file_name
+        file_name = destination[0] + '/' + file_name
+        targz_cmd = (
+            'tar -czvf ' + file_name + ' --absolute-names ' + dir2compress
         )
         start = timer()
-        code, out, err = utils.run(targzCmd)
+        code, out, err = utils.run(targz_cmd)
         if code > 0:
             logger.error(err)
             logger.debug("Status code: "+str(code)+"\tStandard Output: "
@@ -39,145 +39,145 @@ def Targz(paths, destination, encrypt, encPass, noCopies=3, oneDrive=None, oneDr
             return
 
         logger.info("Directory is compressed. File :" +
-                    fileName + " successfully created.")
+                    file_name + " successfully created.")
         end = timer()
         logger.info("Time took for targz :" +
                     str(timedelta(seconds=end - start)))
 
         if str(encrypt).upper() == 'TRUE':
-            fileName = file_management.encrypt_data(
-                fileName, encPass)
+            file_name = file_management.encrypt_data(
+                file_name, enc_pass)
             fn = fn + '.enc'
 
-        if oneDrive is not None:
-            oneDrive.upload_file(one_drive_dir=oneDriveDir,
-                                 local_dir=destination[0], file_name=fn)
-            oneDrive.remove_old_files(
-                file_name=filePrefix, one_drive_dir=oneDriveDir, encrypt=encrypt, no_copies=noCopies)
+        if one_drive is not None:
+            one_drive.upload_file(one_drive_dir=one_drive_dir,
+                                  local_dir=destination[0], file_name=fn)
+            one_drive.remove_old_files(
+                file_name=file_prefix, one_drive_dir=one_drive_dir, encrypt=encrypt, no_copies=no_copies)
         if len(destination) > 1:
             for i in range(0, len(destination)):
                 if i != 0:
-                    file_management.copy(fileName, destination[i], fn)
+                    file_management.copy(file_name, destination[i], fn)
                 file_management.rmold(
-                    dir=destination[i], name=filePrefix, encrypt=encrypt, noCopies=noCopies)
+                    dir=destination[i], name=file_prefix, encrypt=encrypt, no_copies=no_copies)
 
 
-def TargzIncremental(paths, destination, encrypt, encPass, oneDrive=None, oneDriveDir=None):
+def targz_incremental(paths, destination, encrypt, enc_pass, one_drive=None, one_drive_dir=None):
     for dir2compress in paths:
         logger.info("---------------------------------------")
         logger.info("start targz incremental")
         logger.info("---------------------------------------")
         logger.info("Targz provided directories :" +
                     dir2compress)
-        filePrefix = dir2compress.replace(
+        file_prefix = dir2compress.replace(
             '/',
             '-',
         )
-        if filePrefix[0] == '-':
-            filePrefix = filePrefix[1:len(filePrefix)]
-        filePrefix = filePrefix + "inc"
-        fileName = filePrefix + '-' + utils.get_curr_date_time() + '.tar.gz'
-        fn = fileName
-        fileName = destination[0] + '/' + fileName
-        snapFile = destination[0] + '/' + filePrefix + '.snap'
-        targzCmd = (
-            'tar -czPg ' + snapFile + ' -f ' + fileName +
+        if file_prefix[0] == '-':
+            file_prefix = file_prefix[1:len(file_prefix)]
+        file_prefix = file_prefix + "inc"
+        file_name = file_prefix + '-' + utils.get_curr_date_time() + '.tar.gz'
+        fn = file_name
+        file_name = destination[0] + '/' + file_name
+        snap_file = destination[0] + '/' + file_prefix + '.snap'
+        targz_cmd = (
+            'tar -czPg ' + snap_file + ' -f ' + file_name +
             ' --absolute-names ' + dir2compress
         )
         start = timer()
-        code, out, err = utils.run(targzCmd)
+        code, out, err = utils.run(targz_cmd)
         if code > 0:
             logger.error(err)
             logger.debug("Status code: "+str(code)+"\tStandard Output: "
                          + out+"\tStandard Error: "+err)
             return
         logger.info("Directory is compressed. File :" +
-                    fileName + " successfully created.")
+                    file_name + " successfully created.")
         end = timer()
         logger.info("Time took for targz :" +
                     str(timedelta(seconds=end - start)))
 
         if str(encrypt).upper() == 'TRUE':
-            fileName = file_management.encrypt_data(
-                fileName, encPass)
+            file_name = file_management.encrypt_data(
+                file_name, enc_pass)
             fn = fn + '.enc'
 
-        if oneDrive is not None:
-            oneDrive.upload_file(one_drive_dir=oneDriveDir,
-                                 local_dir=destination[0], file_name=fn)
-            oneDrive.upload_file(one_drive_dir=oneDriveDir,
-                                 local_dir=destination[0], file_name=filePrefix + '.snap')
+        if one_drive is not None:
+            one_drive.upload_file(one_drive_dir=one_drive_dir,
+                                  local_dir=destination[0], file_name=fn)
+            one_drive.upload_file(one_drive_dir=one_drive_dir,
+                                  local_dir=destination[0], file_name=file_prefix + '.snap')
         if len(destination) > 1:
             for i in range(1, len(destination)):
-                file_management.copy(fileName, destination[i], fn)
+                file_management.copy(file_name, destination[i], fn)
                 file_management.copy(
-                    snapFile, destination[i], filePrefix + '.snap')
+                    snap_file, destination[i], file_prefix + '.snap')
 
 
-def TargzDifferential(paths, destination, encrypt, encPass, oneDrive=None, oneDriveDir=None):
+def targz_differential(paths, destination, encrypt, enc_pass, one_drive=None, one_drive_dir=None):
     for dir2compress in paths:
         logger.info("---------------------------------------")
         logger.info("start targz differential")
         logger.info("---------------------------------------")
         logger.info("Targz provided directories :" +
                     dir2compress)
-        filePrefix = dir2compress.replace(
+        file_prefix = dir2compress.replace(
             '/',
             '-',
         )
-        if filePrefix[0] == '-':
-            filePrefix = filePrefix[1:len(filePrefix)]
-        filePrefix = filePrefix + "diff"
-        fileName = filePrefix + '-' + utils.get_curr_date_time() + '.tar.gz'
-        fn = fileName
-        fileName = destination[0] + '/' + fileName
-        snapFile = destination[0] + '/' + filePrefix + '.snap'
-        snapFileBak = destination[0] + '/' + filePrefix + '.snap.bak'
-        targzCmd = (
-            'tar -czPg ' + snapFile + ' -f ' + fileName +
+        if file_prefix[0] == '-':
+            file_prefix = file_prefix[1:len(file_prefix)]
+        file_prefix = file_prefix + "diff"
+        file_name = file_prefix + '-' + utils.get_curr_date_time() + '.tar.gz'
+        fn = file_name
+        file_name = destination[0] + '/' + file_name
+        snap_file = destination[0] + '/' + file_prefix + '.snap'
+        snap_file_bak = destination[0] + '/' + file_prefix + '.snap.bak'
+        targz_cmd = (
+            'tar -czPg ' + snap_file + ' -f ' + file_name +
             ' --absolute-names ' + dir2compress
         )
         start = timer()
-        code, out, err = utils.run(targzCmd)
+        code, out, err = utils.run(targz_cmd)
         if code > 0:
             logger.error(err)
             logger.debug("Status code: "+str(code)+"\tStandard Output: "
                          + out+"\tStandard Error: "+err)
             return
         logger.info("Directory is compressed. File :" +
-                    fileName + " successfully created.")
+                    file_name + " successfully created.")
 
-        if not exists(snapFileBak):
-            utils.run("cp " + snapFile + " " + snapFileBak)
+        if not exists(snap_file_bak):
+            utils.run("cp " + snap_file + " " + snap_file_bak)
         else:
-            utils.run("cp " + snapFileBak + " " + snapFile)
+            utils.run("cp " + snap_file_bak + " " + snap_file)
 
         end = timer()
         logger.info("Time took for targz :" +
                     str(timedelta(seconds=end - start)))
 
         if str(encrypt).upper() == 'TRUE':
-            fileName = file_management.encrypt_data(
-                fileName, encPass)
+            file_name = file_management.encrypt_data(
+                file_name, enc_pass)
             fn = fn + '.enc'
 
-        if oneDrive is not None:
-            oneDrive.upload_file(one_drive_dir=oneDriveDir,
-                                 local_dir=destination[0], file_name=fn)
-            oneDrive.upload_file(one_drive_dir=oneDriveDir,
-                                 local_dir=destination[0], file_name=filePrefix + '.snap')
-            oneDrive.upload_file(one_drive_dir=oneDriveDir,
-                                 local_dir=destination[0], file_name=filePrefix + '.snap.bak')
-            oneDrive.keep_only_oldest_and_newest(
-                file_name=filePrefix, one_drive_dir=oneDriveDir, encrypt=encrypt)
+        if one_drive is not None:
+            one_drive.upload_file(one_drive_dir=one_drive_dir,
+                                  local_dir=destination[0], file_name=fn)
+            one_drive.upload_file(one_drive_dir=one_drive_dir,
+                                  local_dir=destination[0], file_name=file_prefix + '.snap')
+            one_drive.upload_file(one_drive_dir=one_drive_dir,
+                                  local_dir=destination[0], file_name=file_prefix + '.snap.bak')
+            one_drive.keep_only_oldest_and_newest(
+                file_name=file_prefix, one_drive_dir=one_drive_dir, encrypt=encrypt)
 
         if len(destination) > 1:
             for i in range(0, len(destination)):
                 if i != 0:
-                    file_management.copy(fileName, destination[i], fn)
+                    file_management.copy(file_name, destination[i], fn)
                     file_management.copy(
-                        snapFile, destination[i], filePrefix + '.snap')
+                        snap_file, destination[i], file_prefix + '.snap')
                     file_management.copy(
-                        snapFileBak, destination[i], filePrefix + '.snap.bak')
+                        snap_file_bak, destination[i], file_prefix + '.snap.bak')
                 file_management.keep_only_oldest_and_newest(
-                    dir=destination[i], name=filePrefix, encrypt=encrypt)
+                    dir=destination[i], name=file_prefix, encrypt=encrypt)

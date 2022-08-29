@@ -1,6 +1,4 @@
 import sys
-
-import utils.utils
 from config import config
 import logging
 
@@ -79,32 +77,32 @@ def run_targz():
     if conf_data.backup_dirs.upper() == "TRUE":
         from targz import targz
         if conf_data.backup_type.upper() == "INCREMENTAL":
-            targz.TargzIncremental(
+            targz.targz_incremental(
                 paths=conf_data.paths,
                 destination=conf_data.destination,
                 encrypt=conf_data.encrypt_dirs,
-                encPass=conf_data.encrypt_dirs_password,
-                oneDrive=one_drive,
-                oneDriveDir=conf_data.onedrive_backup_dir,
+                enc_pass=conf_data.encrypt_dirs_password,
+                one_drive=one_drive,
+                one_drive_dir=conf_data.onedrive_backup_dir,
             )
         elif conf_data.backup_type.upper() == "DIFFERENTIAL":
-            targz.TargzDifferential(
+            targz.targz_differential(
                 paths=conf_data.paths,
                 destination=conf_data.destination,
                 encrypt=conf_data.encrypt_dirs,
-                encPass=conf_data.encrypt_dirs_password,
-                oneDrive=one_drive,
-                oneDriveDir=conf_data.onedrive_backup_dir,
+                enc_pass=conf_data.encrypt_dirs_password,
+                one_drive=one_drive,
+                one_drive_dir=conf_data.onedrive_backup_dir,
             )
         elif conf_data.backup_type.upper() == "FULL":
-            targz.Targz(
+            targz.targz(
                 paths=conf_data.paths,
                 destination=conf_data.destination,
                 encrypt=conf_data.encrypt_dirs,
-                encPass=conf_data.encrypt_dirs_password,
-                noCopies=conf_data.no_copies,
-                oneDrive=one_drive,
-                oneDriveDir=conf_data.onedrive_backup_dir,
+                enc_pass=conf_data.encrypt_dirs_password,
+                no_copies=conf_data.no_copies,
+                one_drive=one_drive,
+                one_drive_dir=conf_data.onedrive_backup_dir,
             )
         else:
             logger.warning(
@@ -148,17 +146,6 @@ def run_mysqldump_remote():
             destinations=conf_data.mysqldump_dump_dest,
             no_copies=conf_data.no_copies
         )
-        # user = "moodledb"
-        # password = "teskasifra1"
-        # database = "moodle"
-        # dest = "/data"
-        # file_name = "moodle-1"
-        # mysqldump = ['/usr/bin/mysqldump -u ', user,
-        #              ' -p' + password,
-        #              ' --single-transaction --quick --lock-tables=false ',
-        #              database, ' > ' +
-        #              dest + '/' + file_name]
-        # print(utils.utils.run_remote(cmd=mysqldump, host="157.90.114.55"))
 
 
 def init_one_drive():

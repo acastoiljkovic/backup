@@ -52,11 +52,13 @@ def encrypt_data(file_name, password):
     """
     enc_cmd = ('openssl ' + 'enc ' + '-aes-256-cbc ' + '-in ' + file_name + ' ' +
                '-out ' + file_name + '.enc ' + '-pass pass:' + password)
+    enc_cmd_log = ('openssl ' + 'enc ' + '-aes-256-cbc ' + '-in ' + file_name + ' ' +
+                   '-out ' + file_name + '.enc ' + '-pass pass:***************')
     logger.info("---------------------------------------")
     logger.info("start encryption")
     logger.info("---------------------------------------")
     start = timer()
-    code, out, err = utils.run(enc_cmd)
+    code, out, err = utils.run(enc_cmd, enc_cmd_log)
     end = timer()
     if code > 0:
         logger.error("Error while encrypting file, status code: " + str(code) +
@@ -76,6 +78,7 @@ def encrypt_data_remote(host, file_name, password):
     will have extension .enc.
 
     Args:
+        host(string): IP address of remote machine
         file_name (string): Full path to the file
         password (string): Salt for encryption
 
@@ -84,11 +87,13 @@ def encrypt_data_remote(host, file_name, password):
     """
     enc_cmd = ('openssl ' + 'enc ' + '-aes-256-cbc ' + '-in ' + file_name + ' ' +
                '-out ' + file_name + '.enc ' + '-pass pass:' + password)
+    enc_cmd_log = ('openssl ' + 'enc ' + '-aes-256-cbc ' + '-in ' + file_name + ' ' +
+                   '-out ' + file_name + '.enc ' + '-pass pass:****************')
     logger.info("---------------------------------------")
     logger.info("start encryption")
     logger.info("---------------------------------------")
     start = timer()
-    code, out, err = utils.run_remote(enc_cmd,host)
+    code, out, err = utils.run_remote(enc_cmd, host, enc_cmd_log)
     end = timer()
     if code > 0:
         logger.error("Error while encrypting file, status code: " + str(code) +
@@ -98,7 +103,7 @@ def encrypt_data_remote(host, file_name, password):
         logger.info("Time took for encrypting :" +
                     str(timedelta(seconds=end - start)))
         logger.debug("Standard output: " + out)
-        utils.run_remote('rm ' + file_name,host)
+        utils.run_remote('rm ' + file_name, host)
         return file_name + '.enc'
 
 
@@ -163,10 +168,6 @@ def sync_remote(hosts, sources, destinations):
     It takes a list of hosts, a list of sources and a list of destinations and synchronizes the sources with the
     destinations on the hosts
 
-    :param hosts: a list of hosts to run the command on
-    :param sources: The source directory to be synchronized
-    :param destinations: The destination directory on the remote machine
-    :return: the code, out, and err.
     """
     logger.info("---------------------------------------")
     logger.info("start synchronizing on remote machines")
@@ -200,7 +201,7 @@ def sync_remote(hosts, sources, destinations):
             j += 1
 
 
-def rmold(dir, name, noCopies, encrypt):
+def rmold(dir, name, no_copies, encrypt):
     """From provided directory, remove files that contain 'name'
         in file name if there is more than 'no_copies' files.
 
@@ -208,13 +209,13 @@ def rmold(dir, name, noCopies, encrypt):
         encrypt:
         dir (string): Directory that contains backups
         name (string): Part of the file name
-        noCopies (integer): Number of files that will persist in dir
+        no_copies (integer): Number of files that will persist in dir
     """
     logger.info("---------------------------------------")
     logger.info("start delete")
     logger.info("---------------------------------------")
     logger.info("Deleting files from directory: " + str(dir))
-    logger.debug("Number of files to save: " + str(noCopies))
+    logger.debug("Number of files to save: " + str(no_copies))
     if encrypt.upper() == "FALSE":
         list_cmd = 'ls -t ' + dir + ' | grep \'' + name + '\' | grep -v \'.enc$\''
     else:
@@ -224,8 +225,8 @@ def rmold(dir, name, noCopies, encrypt):
         line = out.split('\n')
         logger.debug("Number of files: " + str(len(line) - 1))
         logger.debug("Number of files for deletion: " +
-                     str(len(line) - int(noCopies) - 1))
-        for i in range(int(noCopies), len(line) - 1):
+                     str(len(line) - int(no_copies) - 1))
+        for i in range(int(no_copies), len(line) - 1):
             f = dir + '/' + line[i].split(' ')[0]
             rm_cmd = 'rm ' + f
             code, out, err = utils.run(rm_cmd)
@@ -241,36 +242,37 @@ def rmold(dir, name, noCopies, encrypt):
                      " out: " + out + " code: " + str(code))
 
 
-def rmold_remote(host, dir, name, noCopies, encrypt):
+def rmold_remote(host, dir, name, no_copies, encrypt):
     """From provided directory, remove files that contain 'name'
         in file name if there is more than 'no_copies' files.
 
     Args:
+        host: 
         encrypt:
         dir (string): Directory that contains backups
         name (string): Part of the file name
-        noCopies (integer): Number of files that will persist in dir
+        no_copies (integer): Number of files that will persist in dir
     """
     logger.info("---------------------------------------")
     logger.info("start delete remotely")
     logger.info("---------------------------------------")
     logger.info("Deleting files on host: " + host)
     logger.info("Deleting files from directory: " + str(dir))
-    logger.debug("Number of files to save: " + str(noCopies))
+    logger.debug("Number of files to save: " + str(no_copies))
     if encrypt.upper() == "FALSE":
         list_cmd = 'ls -t ' + dir + ' | grep \'' + name + '\' | grep -v \'.enc$\''
     else:
         list_cmd = 'ls -t ' + dir + ' | grep -E \'' + name + '.*.enc*\''
-    code, out, err = utils.run_remote(list_cmd,host)
+    code, out, err = utils.run_remote(list_cmd, host)
     if code == 0:
         line = out.split('\n')
         logger.debug("Number of files: " + str(len(line) - 1))
         logger.debug("Number of files for deletion: " +
-                     str(len(line) - int(noCopies) - 1))
-        for i in range(int(noCopies), len(line) - 1):
+                     str(len(line) - int(no_copies) - 1))
+        for i in range(int(no_copies), len(line) - 1):
             f = dir + '/' + line[i].split(' ')[0]
             rm_cmd = 'rm ' + f
-            code, out, err = utils.run_remote(rm_cmd,host)
+            code, out, err = utils.run_remote(rm_cmd, host)
             if code > 0:
                 logger.error("Error while removing file: " + f +
                              ", Standard Error: " + err + ", Standard output: " + out)
@@ -281,7 +283,6 @@ def rmold_remote(host, dir, name, noCopies, encrypt):
     else:
         logger.error("Error while listing files with error: " + err +
                      " out: " + out + " code: " + str(code))
-
 
 
 def keep_only_oldest_and_newest(dir, name, encrypt):

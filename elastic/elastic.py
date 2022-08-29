@@ -5,7 +5,7 @@ import logging
 logger = logging.getLogger("backup_logger")
 
 
-### add shared file system repo ###
+# add shared file system repo
 # sudo echo 'path.repo: ["/mnt/es_backup"]' >> /etc/elasticsearch/elasticsearch.yml
 # sudo chown -R elasticsearch: /mnt/es_backup/
 # sudo systemctl restart elasticsearch
@@ -21,7 +21,7 @@ def create_repo(es_url, repo_name, location, auth):
     Args:
         es_url (string): URL to Elasticsearch including port. Example: 127.0.0.1:9200 \n
         repo_name (string): Name for the repo. Example: es_backup \n
-        location (string): Absolute location on file system that is also added in elasticserach.yml. Example: /mnt/backup \n
+        location (string): Absolute location on file system that is also added in elasticsearch.yml. Example: /mnt/backup \n
         auth (tuple): Tuple that contains username and password. Example: ('user','password')
     """
     try:
@@ -123,7 +123,7 @@ def delete_snapshot(es_url, repo, snapshot, auth):
 def remove_old_snapshots(es_url, repo, index, auth):
     """Removing all snapshots but one of provided index.
 
-        This method is comparing creation time for all snapshots of index and keping the most recent one.
+        This method is comparing creation time for all snapshots of index and keeping the most recent one.
 
         Also, do the same for any full snapshot.
 

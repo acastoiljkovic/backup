@@ -7,19 +7,22 @@ from paramiko import SSHClient
 logger = logging.getLogger("backup_logger")
 
 
-def run(cmd):
+def run(cmd, cmd_log=None):
     """Execute provided command
 
     Args:
-        cmd (string): Array that contains command and it's arguments
+        cmd_log (string): String that contains command for logging.
+        cmd (string): String that contains command and it's arguments
 
     Returns: (consists of 3 variables)
         int : return code after executing cmd
         string : standard output
         string : standard error
     """
+    if cmd_log is None:
+        cmd_log = cmd
     try:
-        logger.info('Executing: ' + str(cmd))
+        logger.info('Executing: ' + str(cmd_log))
         proc = subprocess.Popen(
             cmd,
             shell=True,
@@ -42,32 +45,29 @@ def get_curr_date_time():
     return datetime.now().strftime("%Y%m%d%H%M%S")
 
 
-def run_remote(cmd, host):
+def run_remote(cmd, host, cmd_log=None):
     try:
+        if cmd_log is None:
+            cmd_log = cmd
         client = SSHClient()
         client.load_system_host_keys()
-        # if logger.level == logging.DEBUG:
-            # client.set_log_channel(name='backup_logger')
-        logger.info("Executing command: " + str(cmd) + " on remote host: " + host)
+        logger.info("Executing command: " + str(cmd_log) + " on remote host: " + host)
         command = ""
         if len(cmd) >= 1:
             for c in cmd:
                 command += str(c)
-        logger.debug("Command as string: " + command)
-
-        # proc = subprocess.Popen(
-        #     "ssh root@"+host + " "+command,
-        #     shell=True,
-        #     stdout=subprocess.PIPE,
-        #     stderr=subprocess.PIPE)
+        command_log = ""
+        if len(cmd_log) >= 1:
+            for c in cmd_log:
+                command_log += str(c)
+        logger.debug("Command as string: " + command_log)
 
         client.connect(hostname=host, username='root')
         stdin, stdout, stderr = client.exec_command(
             command=command,
             timeout=10,
             bufsize=-1)
-        # client.close()
-        # stdout, stderr = proc.communicate()
+        client.close()
 
         if not stdout:
             logger.error(stderr)
