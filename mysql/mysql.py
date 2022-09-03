@@ -7,7 +7,22 @@ from timeit import default_timer as timer
 logger = logging.getLogger("backup_logger")
 
 
-def mysqldump(database, user, password, dest, encrypt, enc_password, no_copies, one_drive=None, one_drive_dir=None):
+def mysqldump(database, user, password, dest, encrypt="False", enc_password=None, no_copies=3, one_drive=None, one_drive_dir=None):
+    """It takes database name with user and password and do dump to provided destination.
+       Also, if encryption is required via encrypt argument, dump can be encrypted.
+       Upload to OneDrive can be done with provided one_drive object, to one_drive_dir on One Drive.
+
+    Args:
+        database (string): Name of database
+        user (string): User with sufficient rights
+        password (string): Password for user
+        dest (string): Destination to store dump
+        encrypt (string): Encrypt dump (True or False)
+        enc_password (string): Password for encryption
+        no_copies (int): Number of dump copies
+        one_drive (OneDrive, optional): OneDrive object that is used to upload dump. Defaults to None.
+        one_drive_dir (string, optional): Directory on OneDrive. Defaults to None.
+    """
     try:
         file_name = 'mysqldump_' + database + \
                     '_' + utils.get_curr_date_time() + '.sql'
@@ -60,14 +75,14 @@ def mysqldump(database, user, password, dest, encrypt, enc_password, no_copies, 
 
 
 def mysqldump_remote(hosts, databases, users, passwords, destinations, encrypts, enc_passwords, no_copies,
-                     one_drive=None, one_drive_dir=None):
+                     one_drive=None, one_drive_dirs=None):
     try:
         logger.info("---------------------------------------")
         logger.info("start mysqldump")
         logger.info("---------------------------------------")
         db_cnt = user_cnt = pw_cnt = dst_cnt = enc_cnt = enc_pw_cnt = odd_cnt = 0
         for host in hosts:
-            file_name = 'mysqldump_' + databases[db_cnt] + \
+            file_name = 'mysqldump_' + databases[db_cnt] + '_' + host +\
                         '_' + utils.get_curr_date_time() + '.sql'
 
             mysqldump_cmd = ('/usr/bin/mysqldump -u ' + users[user_cnt] +
@@ -107,10 +122,10 @@ def mysqldump_remote(hosts, databases, users, passwords, destinations, encrypts,
                 )
 
             if one_drive is not None:
-                one_drive.upload_file(one_drive_dir=one_drive_dir[odd_cnt],
+                one_drive.upload_file(one_drive_dir=one_drive_dirs[odd_cnt],
                                       local_dir=destinations[dst_cnt], file_name=file_name)
                 one_drive.remove_old_files(
-                    file_name='mysqldump_' + databases[db_cnt], one_drive_dir=one_drive_dir[odd_cnt],
+                    file_name='mysqldump_' + databases[db_cnt], one_drive_dir=one_drive_dirs[odd_cnt],
                     encrypt=encrypts[enc_cnt],
                     no_copies=no_copies)
 
@@ -126,7 +141,7 @@ def mysqldump_remote(hosts, databases, users, passwords, destinations, encrypts,
                 enc_cnt += 1
             if len(hosts) == len(enc_passwords):
                 enc_pw_cnt += 1
-            if len(hosts) == len(one_drive_dir):
+            if len(hosts) == len(one_drive_dirs):
                 odd_cnt += 1
 
     except Exception as e:

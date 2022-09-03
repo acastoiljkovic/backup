@@ -173,15 +173,15 @@ def sync_remote(hosts, sources, destinations):
     logger.info("start synchronizing on remote machines")
     logger.info("---------------------------------------")
 
-    i = 0
-    j = 0
+    src_cnt = 0
+    dst_cnt = 0
     for host in hosts:
-        logging.info("Host: " + str(host))
+        logger.info("Host: " + str(host))
         logger.info("Synchronizing directories: " +
-                    sources[i] + " Dst: " + destinations[j])
-        if sources[-1] != '/':
-            sources = sources + '/'
-        rsync_cmd = 'rsync -a --delete ' + sources + ' ' + destinations
+                    sources[src_cnt] + " Dst: " + destinations[dst_cnt])
+        if sources[src_cnt][-1] != '/':
+            sources[src_cnt] = sources[src_cnt] + '/'
+        rsync_cmd = 'rsync -a --delete ' + sources[src_cnt] + ' ' + destinations[dst_cnt]
         start = timer()
         code, out, err = utils.run_remote(rsync_cmd, host)
         if code > 0:
@@ -189,16 +189,16 @@ def sync_remote(hosts, sources, destinations):
                          standard Error: " + err + ", Standard output: " + out)
             return
         else:
-            logger.debug("Directories " + sources + ' and ' +
-                         destinations + " are successfully synchronized")
+            logger.debug("Directories " + sources[src_cnt] + ' and ' +
+                         destinations[dst_cnt] + " are successfully synchronized")
             end = timer()
             logger.info("Time took for synchronization: " +
                         str(timedelta(seconds=end - start)))
 
         if len(hosts) == len(sources):
-            i += 1
+            src_cnt += 1
         if len(hosts) == len(destinations):
-            j += 1
+            dst_cnt += 1
 
 
 def rmold(dir, name, no_copies, encrypt):
@@ -286,6 +286,13 @@ def rmold_remote(host, dir, name, no_copies, encrypt):
 
 
 def keep_only_oldest_and_newest(dir, name, encrypt):
+    """Remove every file that contains "name" in file name but oldest and newest.
+
+    Args:
+        dir (string): Path to directory that contains files
+        name (string): Word that is involved in file names 
+        encrypt (string): Is file encrypted (True or False)
+    """
     logger.info("---------------------------------------")
     logger.info("start delete")
     logger.info("---------------------------------------")

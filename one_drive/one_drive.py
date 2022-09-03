@@ -278,12 +278,8 @@ class OneDrive:
                     'Content-Range': 'bytes ' + str(uploaded_bytes) + '-'
                                      + str(uploaded_bytes + size_curr_request - 1) + '/' + str(file_size)
                 }
-                if ".gz" in file:
-                    import gzip
-                    f = gzip.open(file)
-                    data = f.read(size_curr_request)
-                else:
-                    data = f.read(size_curr_request)
+
+                data = f.read(size_curr_request)
 
                 response = requests.put(url, data=data, headers=headers)
                 if response.status_code >= 300:
@@ -293,6 +289,7 @@ class OneDrive:
                                  "\nResponse text: " + response.text)
                     return
                 uploaded_bytes += size_curr_request
+
         except Exception as e:
             logger.error(str(e))
         end = timer()

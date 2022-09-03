@@ -13,6 +13,8 @@ class ConfigurationData:
             self,
             no_copies=0,
             log_level='INFO',
+            log_path='/var/log/backup/',
+            exec_time=None,
             remote_mysql=None,
             remote_sync=None,
             remote_backup_dirs=None,
@@ -70,6 +72,13 @@ class ConfigurationData:
             dirs2backup_encrypt_passwords=None,
             dirs2backup_backup_type=None,
             dirs2backup_one_drive_dirs=None,
+            mysqldump_exec_time=None,
+            dirs2backup_exec_time=None,
+            elasticsearch_exec_time=None,
+            sync_exec_time=None,
+            mysqldump_remote_exec_time=None,
+            sync_remote_exec_time=None,
+            dirs2backup_remote_exec_time=None,
     ):
 
         """
@@ -183,9 +192,11 @@ class ConfigurationData:
         self.sync_dirs = sync_dirs
         self.upload_to_onedrive = upload_to_onedrive
         self.log_level = log_level
+        self.log_path = log_path
         self.remote_backup_dirs = remote_backup_dirs
         self.remote_sync = remote_sync
         self.remote_mysql = remote_mysql
+        self.exec_time = exec_time
 
         # MYSQL
         #
@@ -197,6 +208,7 @@ class ConfigurationData:
         self.encrypt_mysql = encrypt_mysql
         self.encrypt_mysql_password = encrypt_mysql_password
         self.onedrive_mysql_dir = onedrive_mysql_dir
+        self.mysqldump_exec_time = mysqldump_exec_time
 
         # DIRS2BACKUP
         #
@@ -206,6 +218,7 @@ class ConfigurationData:
         self.encrypt_dirs_password = encrypt_dirs_password
         self.backup_type = backup_type
         self.onedrive_backup_dir = onedrive_backup_dir
+        self.dirs2backup_exec_time = dirs2backup_exec_time
 
         # ELASTICSEARCH
         #
@@ -219,11 +232,13 @@ class ConfigurationData:
         self.es_password = es_password
         self.es_remove_old = es_remove_old
         self.es_restore = es_restore
+        self.elasticsearch_exec_time = elasticsearch_exec_time
 
         # SYNC
         #
         self.src = src
         self.dst = dst
+        self.sync_exec_time = sync_exec_time
 
         # ONEDRIVE
         #
@@ -238,6 +253,7 @@ class ConfigurationData:
         self.sync_hosts = sync_hosts
         self.sync_remote_src = sync_remote_src
         self.sync_remote_dst = sync_remote_dst
+        self.sync_remote_exec_time = sync_remote_exec_time
 
         # MYSQLDUMP REMOTE
         #
@@ -250,6 +266,7 @@ class ConfigurationData:
         self.mysqldump_encrypt = mysqldump_encrypt
         self.mysqldump_encrypt_passwords = mysqldump_encrypt_passwords
         self.mysqldump_one_drive_dirs = mysqldump_one_drive_dirs
+        self.mysqldump_remote_exec_time = mysqldump_remote_exec_time
 
         # DIRS2BACKUP REMOTE
         #
@@ -260,6 +277,7 @@ class ConfigurationData:
         self.dirs2backup_encrypt_passwords = dirs2backup_encrypt_passwords
         self.dirs2backup_backup_type = dirs2backup_backup_type
         self.dirs2backup_one_drive_dirs = dirs2backup_one_drive_dirs
+        self.dirs2backup_remote_exec_time = dirs2backup_remote_exec_time
 
     def load_data(self, path):
         """Load data from file at path provided as argument of this method
@@ -280,16 +298,18 @@ class ConfigurationData:
         if not self.no_copies:
             self.no_copies = 1
 
-        # LOG LEVEL
-        #
         self.log_level = config_parser.get(
             'general', 'log_level', fallback='INFO')
+        self.log_path = config_parser.get(
+            'general', 'log_path', fallback='INFO')
         self.remote_mysql = config_parser.get(
             'general', 'remote_mysql', fallback='False')
         self.remote_sync = config_parser.get(
             'general', 'remote_sync', fallback='False')
         self.remote_backup_dirs = config_parser.get(
             'general', 'remote_backup_dirs', fallback='False')
+        self.exec_time = config_parser.get(
+            'general', 'exec_time', fallback='INFO')
 
         # MYSQL
         #
@@ -309,6 +329,8 @@ class ConfigurationData:
             'mysql', 'enc_pass', fallback=None)
         self.onedrive_mysql_dir = config_parser.get(
             'mysql', 'drive_dir', fallback=None)
+        self.mysqldump_exec_time = config_parser.get(
+            'mysql', 'exec_time', fallback=None)
 
         # DIRS2BACKUP
         #
@@ -326,6 +348,9 @@ class ConfigurationData:
             'dirs2backup', 'backup_type', fallback='fUll')
         self.onedrive_backup_dir = config_parser.get(
             'dirs2backup', 'drive_dir', fallback=None)
+        self.dirs2backup_exec_time = config_parser.get(
+            'dirs2backup', 'exec_time', fallback=None)
+
         # ELASTICSEARCH
         #
         self.backup_es = config_parser.get(
@@ -345,6 +370,8 @@ class ConfigurationData:
             'elasticsearch', 'remove_old', fallback=False)
         self.es_restore = config_parser.get(
             'elasticsearch', 'restore', fallback=False)
+        self.elasticsearch_exec_time = config_parser.get(
+            'elasticsearch', 'exec_time', fallback=None)
 
         # SYNC
         #
@@ -352,6 +379,8 @@ class ConfigurationData:
             'general', 'sync_dirs', fallback=False)
         self.src = config_parser.get('sync', 'src', fallback=None)
         self.dst = config_parser.get('sync', 'dst', fallback=None)
+        self.sync_exec_time = config_parser.get(
+            'sync', 'exec_time', fallback=None)
 
         # ONEDRIVE
         #
@@ -371,16 +400,18 @@ class ConfigurationData:
         # SYNC REMOTE
         #
         self.sync_hosts = config_parser.get(
-            'sync_remote', 'hosts', fallback=[]).split(';')
+            'sync_remote', 'hosts', fallback=[]).strip().split(';')
         self.sync_remote_src = config_parser.get(
             'sync_remote', 'src', fallback=[]).split(';')
         self.sync_remote_dst = config_parser.get(
             'sync_remote', 'dst', fallback=[]).split(';')
+        self.sync_remote_exec_time = config_parser.get(
+            'sync_remote', 'exec_time', fallback=None)
 
         # MYSQLDUMP REMOTE
         #
         self.mysqldump_hosts = config_parser.get(
-            'mysqldump_remote', 'hosts', fallback=[]).split(';')
+            'mysqldump_remote', 'hosts', fallback=[]).strip().split(';')
         self.mysqldump_users = config_parser.get(
             'mysqldump_remote', 'user', fallback=[]).split(';')
         self.mysqldump_passwords = config_parser.get(
@@ -397,16 +428,19 @@ class ConfigurationData:
             'mysqldump_remote', 'enc_pass', fallback=[]).split(';')
         self.mysqldump_one_drive_dirs = config_parser.get(
             'mysqldump_remote', 'drive_dir', fallback=[]).split(';')
+        self.mysqldump_remote_exec_time = config_parser.get(
+            'mysqldump_remote', 'exec_time', fallback=None)
 
         # DIRS2BACKUP REMOTE
         #
-        self.dirs2backup_hosts = config_parser.get('dirs2backup_remote', 'hosts', fallback=[]).split(';')
+        self.dirs2backup_hosts = config_parser.get('dirs2backup_remote', 'hosts', fallback=[]).strip().split(';')
         self.dirs2backup_paths = config_parser.get('dirs2backup_remote', 'path', fallback=[]).split(';')
         self.dirs2backup_destinations = config_parser.get('dirs2backup_remote', 'destination', fallback=[]).split(';')
         self.dirs2backup_encrypt = config_parser.get('dirs2backup_remote', 'encrypt', fallback=[]).split(';')
         self.dirs2backup_encrypt_passwords = config_parser.get('dirs2backup_remote', 'enc_pass', fallback=[]).split(';')
         self.dirs2backup_backup_type = config_parser.get('dirs2backup_remote', 'backup_type', fallback=[]).split(';')
         self.dirs2backup_one_drive_dirs = config_parser.get('dirs2backup_remote', 'drive_dir', fallback=[]).split(';')
+        self.dirs2backup_remote_exec_time = config_parser.get('dirs2backup_remote', 'exec_time', fallback=None)
 
         print("\nConfiguration data loaded successfully!\n")
 
@@ -423,6 +457,8 @@ class ConfigurationData:
         remote_mysql        = {47}
         remote_backup_dirs  = {48}
         log_level           = {6}
+        log_path            = {49}
+        exec_time           = {50}
 
         [mysql]
         user        = {7}
@@ -430,17 +466,19 @@ class ConfigurationData:
         database    = {8}
         mysqldump   = {9}
         file_prefix = {10}
-        encrypt      = {11}
+        encrypt     = {11}
         enc_pass    = ************
         driveDir    = {12}
+        exec_time   = {51}
 
         [dirs2backup]
         path        = {13}
         destination = {14}
-        encrypt      = {15}
+        encrypt     = {15}
         backup_type = {16}
         enc_pass    = ************
         driveDir    = {17}
+        exec_time   = {52}
 
         [elasticsearch]
         es_url      = {18}
@@ -450,25 +488,28 @@ class ConfigurationData:
         user        = {22} 
         password    = ************
         remove_old  = {23}
+        exec_time   = {53}
 
         [sync]
         src         = {24}
         dst         = {25}
+        exec_time   = {54}
 
         [onedrive]
         client_secret   = ************************
         client_id       = {26}
         tenant_id       = {27}
         scopes          = {28}
-        tokens_file      = {29}
+        tokens_file     = {29}
         
         [sync_remote]
         hosts       = {30}
         src         = {31}
         dst         = {32}
+        exec_time   = {55}
         
         [mysqldump_remote]
-        hosts           = {33}
+        hosts       = {33}
         user 	 	= {34}
         password 	= **********************
         database 	= {35}
@@ -476,16 +517,18 @@ class ConfigurationData:
         file_prefix	= {37}
         encrypt		= {38}
         enc_pass	= ***************
-        driveDir        = {39}
+        driveDir    = {39}
+        exec_time   = {56}
         
         [dirs2backup_remote]
-        hosts           = {40}
+        hosts       = {40}
         paths   	= {41}
         destination	= {42}
         encrypt		= {43}
         enc_pass	= ***************
-        backup_type		= {44}
-        driveDir        = {45}
+        backup_type = {44}
+        driveDir    = {45}
+        exec_time   = {57}
         
         """.format(self.no_copies,
                    self.backup_mysql,
@@ -535,6 +578,15 @@ class ConfigurationData:
                    self.dirs2backup_one_drive_dirs,
                    self.remote_sync,
                    self.remote_mysql,
-                   self.remote_backup_dirs
+                   self.remote_backup_dirs,
+                   self.log_path,
+                   self.exec_time,
+                   self.mysqldump_exec_time,
+                   self.dirs2backup_exec_time,
+                   self.elasticsearch_exec_time,
+                   self.sync_exec_time,
+                   self.sync_remote_exec_time,
+                   self.mysqldump_remote_exec_time,
+                   self.dirs2backup_remote_exec_time,
                    )
         return formatted

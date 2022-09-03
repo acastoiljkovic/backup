@@ -1,5 +1,5 @@
 import sys
-import backup
+from backup import backup
 
 if __name__ == "__main__":
     path = '/etc/backup/config.cnf'

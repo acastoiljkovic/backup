@@ -1,6 +1,8 @@
 from utils import utils
 import requests
 import logging
+from timeit import default_timer as timer
+from datetime import timedelta
 
 logger = logging.getLogger("backup_logger")
 
@@ -24,6 +26,9 @@ def create_repo(es_url, repo_name, location, auth):
         location (string): Absolute location on file system that is also added in elasticsearch.yml. Example: /mnt/backup \n
         auth (tuple): Tuple that contains username and password. Example: ('user','password')
     """
+    logger.info("---------------------------------------")
+    logger.info("start snapshotting elasticsearch")
+    logger.info("---------------------------------------")
     try:
         req = requests.post(
             es_url + '/_snapshot/' + repo_name + '/_verify',
@@ -55,6 +60,7 @@ def create_snapshot_full(es_url, repo, auth):
         auth (tuple): Tuple that contains username and password. Example: ('user','password')
     """
     try:
+        start = timer()
         r = requests.put(
             es_url + '/_snapshot/' + repo + '/full' +
             utils.get_curr_date_time() + '?wait_for_completion=true',
@@ -64,6 +70,9 @@ def create_snapshot_full(es_url, repo, auth):
             logger.info("Created Snapshot: " +
                         str(r.json()['snapshot']['snapshot']))
             logger.debug(str(r.json()))
+            end = timer()
+            logger.info("Time took for creating snapshot: " +
+                        str(timedelta(seconds=end - start)))
         else:
             logger.error(r.content.decode())
     except Exception as e:
@@ -80,6 +89,7 @@ def create_snapshot_of_index(es_url, repo, index, auth):
         auth (tuple): Tuple that contains username and password. Example: ('user','password')
     """
     try:
+        start = timer()
         r = requests.put(
             es_url + '/_snapshot/' + repo + '/' + index +
             utils.get_curr_date_time() + '?wait_for_completion=true',
@@ -91,6 +101,9 @@ def create_snapshot_of_index(es_url, repo, index, auth):
             logger.info("Created Snapshot: " +
                         str(r.json()['snapshot']['snapshot']))
             logger.debug(str(r.json()))
+            end = timer()
+            logger.info("Time took for creating snapshot: " +
+                        str(timedelta(seconds=end - start)))
         else:
             logger.error(r.content.decode())
     except Exception as e:
