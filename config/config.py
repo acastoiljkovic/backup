@@ -315,46 +315,46 @@ class ConfigurationData:
         #
         self.backup_mysql = config_parser.get(
             'general', 'backup_mysql', fallback='False')
-        self.user_mysql = config_parser.get('mysql', 'user', fallback=None)
+        self.user_mysql = config_parser.get('mysql', 'user', fallback='')
         self.password_mysql = config_parser.get(
-            'mysql', 'password', fallback=None)
-        self.database = config_parser.get('mysql', 'database', fallback=None)
+            'mysql', 'password', fallback='')
+        self.database = config_parser.get('mysql', 'database', fallback='')
         self.dump_destination = config_parser.get(
             'mysql', 'destination', fallback="")
         self.file_prefix = config_parser.get(
-            'mysql', 'file_prefix', fallback=None)
+            'mysql', 'file_prefix', fallback='')
         self.encrypt_mysql = config_parser.get(
             'mysql', 'encrypt', fallback=False)
         self.encrypt_mysql_password = config_parser.get(
-            'mysql', 'enc_pass', fallback=None)
+            'mysql', 'enc_pass', fallback='')
         self.onedrive_mysql_dir = config_parser.get(
-            'mysql', 'drive_dir', fallback=None)
+            'mysql', 'drive_dir', fallback='')
         self.mysqldump_exec_time = config_parser.get(
             'mysql', 'exec_time', fallback=None)
 
         # DIRS2BACKUP
         #
         self.backup_dirs = config_parser.get(
-            'general', 'backup_dirs', fallback=False)
+            'general', 'backup_dirs', fallback='False')
         self.paths = config_parser.get(
             'dirs2backup', 'path', fallback="").split(';')
         self.destination = config_parser.get('dirs2backup',
                                              'destination', fallback="").split(';')
         self.encrypt_dirs = config_parser.get(
-            'dirs2backup', 'encrypt', fallback=False)
+            'dirs2backup', 'encrypt', fallback='False')
         self.encrypt_dirs_password = config_parser.get(
-            'dirs2backup', 'enc_pass', fallback=None)
+            'dirs2backup', 'enc_pass', fallback='')
         self.backup_type = config_parser.get(
             'dirs2backup', 'backup_type', fallback='fUll')
         self.onedrive_backup_dir = config_parser.get(
-            'dirs2backup', 'drive_dir', fallback=None)
+            'dirs2backup', 'drive_dir', fallback='')
         self.dirs2backup_exec_time = config_parser.get(
             'dirs2backup', 'exec_time', fallback=None)
 
         # ELASTICSEARCH
         #
         self.backup_es = config_parser.get(
-            'general', 'backup_es', fallback=False)
+            'general', 'backup_es', fallback='False')
         self.es_url = config_parser.get(
             'elasticsearch', 'es_url', fallback="127.0.0.1:9200")
         self.es_full = config_parser.get('elasticsearch', 'full', fallback=False)
@@ -367,9 +367,9 @@ class ConfigurationData:
         self.es_password = config_parser.get(
             'elasticsearch', 'password', fallback="")
         self.es_remove_old = config_parser.get(
-            'elasticsearch', 'remove_old', fallback=False)
+            'elasticsearch', 'remove_old', fallback='False')
         self.es_restore = config_parser.get(
-            'elasticsearch', 'restore', fallback=False)
+            'elasticsearch', 'restore', fallback='False')
         self.elasticsearch_exec_time = config_parser.get(
             'elasticsearch', 'exec_time', fallback=None)
 
@@ -377,69 +377,69 @@ class ConfigurationData:
         #
         self.sync_dirs = config_parser.get(
             'general', 'sync_dirs', fallback=False)
-        self.src = config_parser.get('sync', 'src', fallback=None)
-        self.dst = config_parser.get('sync', 'dst', fallback=None)
+        self.src = config_parser.get('sync', 'src', fallback='')
+        self.dst = config_parser.get('sync', 'dst', fallback='')
         self.sync_exec_time = config_parser.get(
             'sync', 'exec_time', fallback=None)
 
         # ONEDRIVE
         #
         self.upload_to_onedrive = config_parser.get(
-            'general', 'up2onedrive', fallback=False)
+            'general', 'up2onedrive', fallback='False')
         self.client_secret = config_parser.get(
-            'onedrive', 'client_secret', fallback=None)
+            'onedrive', 'client_secret', fallback='')
         self.client_id = config_parser.get(
-            'onedrive', 'client_id', fallback=None)
+            'onedrive', 'client_id', fallback='')
         self.tenant_id = config_parser.get(
-            'onedrive', 'tenant_id', fallback=None)
+            'onedrive', 'tenant_id', fallback='')
         self.scopes = config_parser.get(
             'onedrive', 'scopes', fallback="").split(';')
         self.tokens_file = config_parser.get(
-            'onedrive', 'tokens_file', fallback='./tokens.json')
+            'onedrive', 'tokens_file', fallback='/etc/backup/tokens.json')
 
         # SYNC REMOTE
         #
         self.sync_hosts = config_parser.get(
-            'sync_remote', 'hosts', fallback=[]).strip().split(';')
+            'sync_remote', 'hosts', fallback='').strip().split(';')
         self.sync_remote_src = config_parser.get(
-            'sync_remote', 'src', fallback=[]).split(';')
+            'sync_remote', 'src', fallback='').split(';')
         self.sync_remote_dst = config_parser.get(
-            'sync_remote', 'dst', fallback=[]).split(';')
+            'sync_remote', 'dst', fallback='').split(';')
         self.sync_remote_exec_time = config_parser.get(
             'sync_remote', 'exec_time', fallback=None)
 
         # MYSQLDUMP REMOTE
         #
         self.mysqldump_hosts = config_parser.get(
-            'mysqldump_remote', 'hosts', fallback=[]).strip().split(';')
+            'mysqldump_remote', 'hosts', fallback='').strip().split(';')
         self.mysqldump_users = config_parser.get(
-            'mysqldump_remote', 'user', fallback=[]).split(';')
+            'mysqldump_remote', 'user', fallback='').split(';')
         self.mysqldump_passwords = config_parser.get(
-            'mysqldump_remote', 'password', fallback=[]).split(';')
+            'mysqldump_remote', 'password', fallback='').split(';')
         self.mysqldump_databases = config_parser.get(
-            'mysqldump_remote', 'database', fallback=[]).split(';')
+            'mysqldump_remote', 'database', fallback='').split(';')
         self.mysqldump_dump_dest = config_parser.get(
-            'mysqldump_remote', 'destination', fallback=[]).split(';')
+            'mysqldump_remote', 'destination', fallback='').split(';')
         self.mysqldump_file_prefixes = config_parser.get(
-            'mysqldump_remote', 'file_prefix', fallback=[]).split(';')
+            'mysqldump_remote', 'file_prefix', fallback='').split(';')
         self.mysqldump_encrypt = config_parser.get(
-            'mysqldump_remote', 'encrypt', fallback=[]).split(';')
+            'mysqldump_remote', 'encrypt', fallback='').split(';')
         self.mysqldump_encrypt_passwords = config_parser.get(
-            'mysqldump_remote', 'enc_pass', fallback=[]).split(';')
+            'mysqldump_remote', 'enc_pass', fallback='').split(';')
         self.mysqldump_one_drive_dirs = config_parser.get(
-            'mysqldump_remote', 'drive_dir', fallback=[]).split(';')
+            'mysqldump_remote', 'drive_dir', fallback='').split(';')
         self.mysqldump_remote_exec_time = config_parser.get(
             'mysqldump_remote', 'exec_time', fallback=None)
 
         # DIRS2BACKUP REMOTE
         #
-        self.dirs2backup_hosts = config_parser.get('dirs2backup_remote', 'hosts', fallback=[]).strip().split(';')
-        self.dirs2backup_paths = config_parser.get('dirs2backup_remote', 'path', fallback=[]).split(';')
-        self.dirs2backup_destinations = config_parser.get('dirs2backup_remote', 'destination', fallback=[]).split(';')
-        self.dirs2backup_encrypt = config_parser.get('dirs2backup_remote', 'encrypt', fallback=[]).split(';')
-        self.dirs2backup_encrypt_passwords = config_parser.get('dirs2backup_remote', 'enc_pass', fallback=[]).split(';')
-        self.dirs2backup_backup_type = config_parser.get('dirs2backup_remote', 'backup_type', fallback=[]).split(';')
-        self.dirs2backup_one_drive_dirs = config_parser.get('dirs2backup_remote', 'drive_dir', fallback=[]).split(';')
+        self.dirs2backup_hosts = config_parser.get('dirs2backup_remote', 'hosts', fallback='').strip().split(';')
+        self.dirs2backup_paths = config_parser.get('dirs2backup_remote', 'path', fallback='').split(';')
+        self.dirs2backup_destinations = config_parser.get('dirs2backup_remote', 'destination', fallback='').split(';')
+        self.dirs2backup_encrypt = config_parser.get('dirs2backup_remote', 'encrypt', fallback='').split(';')
+        self.dirs2backup_encrypt_passwords = config_parser.get('dirs2backup_remote', 'enc_pass', fallback='').split(';')
+        self.dirs2backup_backup_type = config_parser.get('dirs2backup_remote', 'backup_type', fallback='').split(';')
+        self.dirs2backup_one_drive_dirs = config_parser.get('dirs2backup_remote', 'drive_dir', fallback='').split(';')
         self.dirs2backup_remote_exec_time = config_parser.get('dirs2backup_remote', 'exec_time', fallback=None)
 
         print("\nConfiguration data loaded successfully!\n")
