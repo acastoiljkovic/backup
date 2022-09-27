@@ -7,17 +7,14 @@ logger = logging.getLogger("backup_logger")
 
 
 def decrypt_data(file_name, password):
-    """Method to decrypt encrypted file using aes-256 algorithm.
-    As a result, provided file will be removed, and new file 
-    will be without extension .enc.
-
-    Args:
-        file_name (string): Full path to the file with .enc extension
-        password (string): Salt that is used to encrypt file
-
-    Returns:
-        string: Path to the decrypted file
     """
+    It decrypts the file using the provided password
+
+    :param file_name: The name of the file to be encrypted
+    :param password: The password used to encrypt the file
+    :return: The name of the file without the .enc extension.
+    """
+
     enc_cmd = ('openssl enc -aes-256-cbc -d -in ' + file_name + ' -out ' +
                file_name[:len(file_name) - 4] + ' -pass pass:' + password)
     logger.info("---------------------------------------")
@@ -39,17 +36,14 @@ def decrypt_data(file_name, password):
 
 
 def encrypt_data(file_name, password):
-    """Method to encrypt provided file using aes-256 algorithm.
-    As a result, provided file will be removed, and new file
-    will have extension .enc.
-
-    Args:
-        file_name (string): Full path to the file
-        password (string): Salt for encryption
-
-    Returns:
-        string: Path to the encrypted file
     """
+    It encrypts the file using the provided password
+
+    :param file_name: The name of the file to be encrypted
+    :param password: The password used to encrypt the file
+    :return: The encrypted file name is being returned.
+    """
+
     enc_cmd = ('openssl ' + 'enc ' + '-aes-256-cbc ' + '-in ' + file_name + ' ' +
                '-out ' + file_name + '.enc ' + '-pass pass:' + password)
     enc_cmd_log = ('openssl ' + 'enc ' + '-aes-256-cbc ' + '-in ' + file_name + ' ' +
@@ -73,18 +67,15 @@ def encrypt_data(file_name, password):
 
 
 def encrypt_data_remote(host, file_name, password):
-    """Method to encrypt provided file using aes-256 algorithm.
-    As a result, provided file will be removed, and new file
-    will have extension .enc.
-
-    Args:
-        host(string): IP address of remote machine
-        file_name (string): Full path to the file
-        password (string): Salt for encryption
-
-    Returns:
-        string: Path to the encrypted file
     """
+    It encrypts the file on the remote host using the provided password
+
+    :param host: The hostname or IP address of the remote machine
+    :param file_name: The name of the file to be encrypted
+    :param password: The password used to encrypt the file
+    :return: The encrypted file name.
+    """
+
     enc_cmd = ('openssl ' + 'enc ' + '-aes-256-cbc ' + '-in ' + file_name + ' ' +
                '-out ' + file_name + '.enc ' + '-pass pass:' + password)
     enc_cmd_log = ('openssl ' + 'enc ' + '-aes-256-cbc ' + '-in ' + file_name + ' ' +
@@ -108,13 +99,15 @@ def encrypt_data_remote(host, file_name, password):
 
 
 def copy(file, destination, file_name):
-    """Copy file to the new destination with new file_name
-
-    Args:
-        file (string): file name
-        destination (string): path where to copy file
-        file_name (string): new file name
     """
+    It copies a file from one location to another
+
+    :param file: The file you want to copy
+    :param destination: The destination folder where the file will be copied to
+    :param file_name: The name of the file you want to copy
+    :return: the time it took to copy the file.
+    """
+
     cp_cmd = 'cp ' + file + ' ' + destination + '/' + file_name
     logger.info("---------------------------------------")
     logger.info("start coping files")
@@ -133,14 +126,14 @@ def copy(file, destination, file_name):
 
 
 def sync(src, dst):
-    """Using rsync to synchronize content of provided directories.
-        Destination directory will contain the same data as source
-        directory after execution.
-
-    Args:
-        src (string): Source directory
-        dst (string): Destination directory
     """
+    It synchronizes the source and destination directories
+
+    :param src: The source directory to be synchronized
+    :param dst: The destination directory
+    :return: the code, out, and err.
+    """
+
     logger.info("---------------------------------------")
     logger.info("start synchronizing")
     logger.info("---------------------------------------")
@@ -163,54 +156,50 @@ def sync(src, dst):
                     str(timedelta(seconds=end - start)))
 
 
-def sync_remote(hosts, sources, destinations):
+def sync_remote(host, source, destination):
     """
-    It takes a list of hosts, a list of sources and a list of destinations and synchronizes the sources with the
-    destinations on the hosts
+    It uses rsync to synchronize the contents of two directories
 
+    :param host: The hostname of the remote machine
+    :param source: The source directory to be synchronized
+    :param destination: The destination directory on the remote machine
+    :return: the code, out, and err.
     """
+
     logger.info("---------------------------------------")
     logger.info("start synchronizing on remote machines")
     logger.info("---------------------------------------")
 
-    src_cnt = 0
-    dst_cnt = 0
-    for host in hosts:
-        logger.info("Host: " + str(host))
-        logger.info("Synchronizing directories: " +
-                    sources[src_cnt] + " Dst: " + destinations[dst_cnt])
-        if sources[src_cnt][-1] != '/':
-            sources[src_cnt] = sources[src_cnt] + '/'
-        rsync_cmd = 'rsync -a --delete ' + sources[src_cnt] + ' ' + destinations[dst_cnt]
-        start = timer()
-        code, out, err = utils.run_remote(rsync_cmd, host)
-        if code > 0:
-            logger.error("Error while synchronizing directories, \
-                         standard Error: " + err + ", Standard output: " + out)
-            return
-        else:
-            logger.debug("Directories " + sources[src_cnt] + ' and ' +
-                         destinations[dst_cnt] + " are successfully synchronized")
-            end = timer()
-            logger.info("Time took for synchronization: " +
-                        str(timedelta(seconds=end - start)))
-
-        if len(hosts) == len(sources):
-            src_cnt += 1
-        if len(hosts) == len(destinations):
-            dst_cnt += 1
+    logger.info("Host: " + str(host))
+    logger.info("Synchronizing directories: " +
+                source + " Dst: " + destination)
+    if source[-1] != '/':
+        source = source + '/'
+    rsync_cmd = 'rsync -a --delete ' + source + ' ' + destination
+    start = timer()
+    code, out, err = utils.run_remote(rsync_cmd, host)
+    if code > 0:
+        logger.error("Error while synchronizing directories, \
+                     standard Error: " + err + ", Standard output: " + out)
+        return
+    else:
+        logger.debug("Directories " + source + ' and ' +
+                     destination + " are successfully synchronized")
+        end = timer()
+        logger.info("Time took for synchronization: " +
+                    str(timedelta(seconds=end - start)))
 
 
 def rmold(dir, name, no_copies, encrypt):
-    """From provided directory, remove files that contain 'name'
-        in file name if there is more than 'no_copies' files.
-
-    Args:
-        encrypt:
-        dir (string): Directory that contains backups
-        name (string): Part of the file name
-        no_copies (integer): Number of files that will persist in dir
     """
+    It deletes all but the most recent N files in a directory
+
+    :param dir: The directory where the files are located
+    :param name: The name of the file to be backed up
+    :param no_copies: The number of copies to keep
+    :param encrypt: True/False
+    """
+
     logger.info("---------------------------------------")
     logger.info("start delete")
     logger.info("---------------------------------------")
@@ -243,16 +232,16 @@ def rmold(dir, name, no_copies, encrypt):
 
 
 def rmold_remote(host, dir, name, no_copies, encrypt):
-    """From provided directory, remove files that contain 'name'
-        in file name if there is more than 'no_copies' files.
-
-    Args:
-        host: 
-        encrypt:
-        dir (string): Directory that contains backups
-        name (string): Part of the file name
-        no_copies (integer): Number of files that will persist in dir
     """
+    It deletes old files from a remote host
+
+    :param host: The hostname or IP address of the remote host
+    :param dir: The directory where the files are located
+    :param name: The name of the file to be backed up
+    :param no_copies: The number of copies to keep
+    :param encrypt: This is a boolean value that tells the script whether or not to encrypt the backup
+    """
+
     logger.info("---------------------------------------")
     logger.info("start delete remotely")
     logger.info("---------------------------------------")
@@ -286,13 +275,14 @@ def rmold_remote(host, dir, name, no_copies, encrypt):
 
 
 def keep_only_oldest_and_newest(dir, name, encrypt):
-    """Remove every file that contains "name" in file name but oldest and newest.
-
-    Args:
-        dir (string): Path to directory that contains files
-        name (string): Word that is involved in file names 
-        encrypt (string): Is file encrypted (True or False)
     """
+    It deletes all but the newest and oldest files in a directory
+
+    :param dir: The directory where the files are located
+    :param name: The name of the file to be deleted
+    :param encrypt: This is a boolean value that tells the script whether or not to encrypt the file
+    """
+
     logger.info("---------------------------------------")
     logger.info("start delete")
     logger.info("---------------------------------------")

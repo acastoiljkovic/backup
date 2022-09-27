@@ -14,17 +14,13 @@ logger = logging.getLogger("backup_logger")
 
 
 def create_repo(es_url, repo_name, location, auth):
-    """Create Elasticsearch repo for storing snapshots.
+    """
+    Create repo in Elasticsearch.
 
-    Note: it's required to set 'path.repo' in 'elasticsearch.yml' in order to use file system path as repo.
-
-    Currently, https is not supported .
-
-    Args:
-        es_url (string): URL to Elasticsearch including port. Example: 127.0.0.1:9200 \n
-        repo_name (string): Name for the repo. Example: es_backup \n
-        location (string): Absolute location on file system that is also added in elasticsearch.yml. Example: /mnt/backup \n
-        auth (tuple): Tuple that contains username and password. Example: ('user','password')
+    :param es_url: The URL of the Elasticsearch cluster
+    :param repo_name: The name of the repository
+    :param location: The location of the repository
+    :param auth: This is the authentication information for the Elasticsearch cluster
     """
     logger.info("---------------------------------------")
     logger.info("start snapshotting elasticsearch")
@@ -52,13 +48,14 @@ def create_repo(es_url, repo_name, location, auth):
 
 
 def create_snapshot_full(es_url, repo, auth):
-    """Creating snapshot for all indices in Elasticsearch.
-
-    Args:
-        es_url (string): URL to Elasticsearch including port. Example: 127.0.0.1:9200 \n
-        repo (string): Repo name where would you like to store snapshots. Example: es_backup \n
-        auth (tuple): Tuple that contains username and password. Example: ('user','password')
     """
+    It creates a snapshot of the entire cluster
+
+    :param es_url: The URL of the Elasticsearch cluster
+    :param repo: The name of the repository to create the snapshot in
+    :param auth: This is the authentication information for the Elasticsearch cluster
+    """
+
     try:
         start = timer()
         r = requests.put(
@@ -80,14 +77,15 @@ def create_snapshot_full(es_url, repo, auth):
 
 
 def create_snapshot_of_index(es_url, repo, index, auth):
-    """Create snapshot for provided index.
-
-    Args:
-        es_url (string): URL to Elasticsearch including port. Example: 127.0.0.1:9200 \n
-        repo (string): Repo name where would you like to store snapshots. Example: es_backup \n
-        index (string): Name of the index that snapshot would be created. Example: users \n
-        auth (tuple): Tuple that contains username and password. Example: ('user','password')
     """
+    It creates a snapshot of the index passed as a parameter
+
+    :param es_url: The URL of the Elasticsearch cluster
+    :param repo: The name of the repository to use
+    :param index: The name of the index to snapshot
+    :param auth: This is the authentication for the Elasticsearch cluster
+    """
+
     try:
         start = timer()
         r = requests.put(
@@ -111,14 +109,16 @@ def create_snapshot_of_index(es_url, repo, index, auth):
 
 
 def delete_snapshot(es_url, repo, snapshot, auth):
-    """Delete provided snapshot.
-
-    Args:
-        es_url (string): URL to Elasticsearch including port. Example: 127.0.0.1:9200 \n
-        repo (string): Repo name where would you like to store snapshots. Example: es_backup \n
-        snapshot (string): Name of the snapshot that would be deleted. Example: users20220703102015 \n
-        auth (tuple): Tuple that contains username and password. Example: ('user','password')
     """
+    It takes the Elasticsearch URL, the repository name, the snapshot name, and the authentication credentials as arguments,
+    and then deletes the snapshot
+
+    :param es_url: The URL of the Elasticsearch cluster
+    :param repo: The name of the repository to use
+    :param snapshot: The name of the snapshot to delete
+    :param auth: The authentication credentials for the Elasticsearch cluster
+    """
+
     try:
         r = requests.delete(
             es_url + '/_snapshot/' + repo + '/' + snapshot,
@@ -134,18 +134,15 @@ def delete_snapshot(es_url, repo, snapshot, auth):
 
 
 def remove_old_snapshots(es_url, repo, index, auth):
-    """Removing all snapshots but one of provided index.
-
-        This method is comparing creation time for all snapshots of index and keeping the most recent one.
-
-        Also, do the same for any full snapshot.
-
-    Args:
-        es_url (string): URL to Elasticsearch including port. Example: 127.0.0.1:9200 \n
-        repo (string): Repo name where would you like to store snapshots. Example: es_backup \n
-        index (string): Name of the index which snapshot would be deleted. Example: users \n
-        auth (tuple): Tuple that contains username and password. Example: ('user','password')
     """
+    It will delete all snapshots except the latest one for each index and the latest full snapshot
+
+    :param es_url: The URL of the Elasticsearch cluster
+    :param repo: The name of the repository to use
+    :param index: The name of the index to be backed up
+    :param auth: This is the authentication information for the Elasticsearch cluster
+    """
+
     try:
         req_all_snap = requests.get(
             es_url + '/_snapshot/' + repo + '/_all',
@@ -179,17 +176,17 @@ def remove_old_snapshots(es_url, repo, index, auth):
 
 
 def find_newest_snapshot(es_url, repo, index, auth):
-    """Finding the snapshot with most recent creation time.
-
-    Args:
-        es_url (string): URL to Elasticsearch including port. Example: 127.0.0.1:9200 \n
-        repo (string): Repo name where would you like to store snapshots. Example: es_backup \n
-        index (string): Name of the index that snapshot would be created. Example: users \n
-        auth (tuple): Tuple that contains username and password. Example: ('user','password')
-
-    Returns:
-        _type_: _description_
     """
+    It takes the Elasticsearch URL, the repository name, the index name and the authentication credentials as input and
+    returns the name of the latest snapshot of the index
+
+    :param es_url: The URL of the Elasticsearch cluster
+    :param repo: The name of the repository you want to use
+    :param index: The name of the index you want to backup
+    :param auth: This is the authentication information for the Elasticsearch cluster
+    :return: The name of the snapshot.
+    """
+
     try:
         req_all_snap = requests.get(
             es_url + '/_snapshot/' + repo + '/_all',
@@ -213,16 +210,15 @@ def find_newest_snapshot(es_url, repo, index, auth):
 
 
 def restore_from_snapshot(es_url, repo, index, auth):
-    """ Restore index from most recent snapshot.
-
-        If index exists, it is required to delete it firs, and then run again this method.
-
-    Args:
-        es_url (string): URL to Elasticsearch including port. Example: 127.0.0.1:9200 \n
-        repo (string): Repo name where would you like to store snapshots. Example: es_backup \n
-        index (string): Name of the index that snapshot would be created. Example: users \n
-        auth (tuple): Tuple that contains username and password. Example: ('user','password')
     """
+    It restores the latest snapshot of the index.
+
+    :param es_url: The URL of the Elasticsearch instance
+    :param repo: The name of the repository to use
+    :param index: The name of the index to be backed up
+    :param auth: This is a tuple of the username and password for the Elasticsearch instance
+    """
+
     try:
         snapshot_name = find_newest_snapshot(
             es_url=es_url, repo=repo, index=index, auth=auth)

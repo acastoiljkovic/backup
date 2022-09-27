@@ -51,6 +51,10 @@ class OneDrive:
         self.__perform_login()
 
     def __get_tokens_from_file(self):
+        """
+        It opens a file, reads the content, converts it to a dictionary, and assigns it to a variable
+        :return: The tokens are being returned.
+        """
         if pathlib.Path(self.tokens_file).is_file():
             try:
                 logger.debug("Opening file: " + self.tokens_file)
@@ -70,6 +74,10 @@ class OneDrive:
             return False
 
     def create_authorization_url(self):
+        """
+        It creates an authorization URL that will be used to get an authorization code from the user
+        :return: The authorization URL.
+        """
         authorization_url = (
                 self.__AUTHORIZE_BASE_URL +
                 '?client_id=' +
@@ -87,6 +95,13 @@ class OneDrive:
         return authorization_url.replace(' ', '%20')
 
     def check_tokens(self):
+        """
+        If the tokens are not None, check if the access token is not None, if it is not None, check if the refresh token is
+        not None, if it is not None, make a request to the API to check if the tokens are valid, if the response is 200, the
+        tokens are valid, if the response is 401, the tokens are expired, if the response is anything else, there's an
+        unexpected error
+        :return: a boolean value.
+        """
         if self.tokens is not None:
             if self.tokens['access_token'] is not None:
                 logger.debug('Access token exists')
@@ -115,6 +130,13 @@ class OneDrive:
         return False
 
     def get_tokens(self, redirection_url):
+        """
+        It takes the redirection url, parses the code from it, and then sends a POST request to the tokens base url with the
+        client id, scope, code, grant type, and client secret
+
+        :param redirection_url: The URL that the user is redirected to after they have logged in and authorized your
+        application
+        """
         code = parse_qs(urlparse(redirection_url).query)['code'][0]
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -138,6 +160,9 @@ class OneDrive:
             logger.error("Error while getting tokens: " + str(e))
 
     def __save_tokens_to_file(self):
+        """
+        It opens a file, writes the tokens to it, and closes the file
+        """
         try:
             with open(self.tokens_file, 'w') as f:
                 logger.debug("Opening file: " + self.tokens_file)
@@ -148,6 +173,9 @@ class OneDrive:
             logger.error("Error while writing tokens to a file " + str(e))
 
     def renew_tokens(self):
+        """
+        It takes the refresh token from the tokens.json file, and uses it to request a new access token
+        """
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -173,6 +201,11 @@ class OneDrive:
             logger.warning("New access token is same as old !")
 
     def __perform_login(self):
+        """
+        If we can get tokens from a file, we do that. If we can't, we check if we already have tokens. If we don't, we
+        create an authorization URL and ask the user to go to it. Once they've done that, we ask them to paste the URL they
+        were redirected to, and we use that to get tokens
+        """
         if self.__get_tokens_from_file():
             logger.info("Successfully gathered tokens from file!")
         elif self.check_tokens():
@@ -185,6 +218,13 @@ class OneDrive:
             self.get_tokens(redirection_url=redirection_url)
 
     def upload_file(self, one_drive_dir="", local_dir=".", file_name="bck"):
+        """
+        It takes a file from a local directory and uploads it to a OneDrive directory
+
+        :param one_drive_dir: The directory on OneDrive where you want to upload the file
+        :param local_dir: The local directory where the file is located, defaults to . (optional)
+        :param file_name: The name of the file you want to upload, defaults to bck (optional)
+        """
         if one_drive_dir[0] == '/':
             one_drive_dir = one_drive_dir[1:]
         if self.tokens is None:
@@ -199,11 +239,19 @@ class OneDrive:
                     url=upload_url,
                     file=(local_dir + '/' + file_name)
                 )
+
             except Exception as e:
                 logger.error(
                     "Error while performing upload to OneDrive: " + str(e))
 
     def __get_upload_url(self, dir, file_name):
+        """
+        It gets the upload URL for a file
+
+        :param dir: The directory where the file will be uploaded
+        :param file_name: The name of the file to be uploaded
+        :return: The response object is being returned.
+        """
 
         response = self.__get_upload_url_request(dir=dir, file_name=file_name)
 
@@ -219,6 +267,13 @@ class OneDrive:
             return None
 
     def __get_upload_url_request(self, dir, file_name):
+        """
+        It gets the upload URL for a file
+
+        :param dir: The directory where the file will be uploaded
+        :param file_name: The name of the file to be uploaded
+        :return: The response object is being returned.
+        """
         request_body = {
             "item": {
                 "description": "Uploaded file from backup system.",
@@ -254,6 +309,13 @@ class OneDrive:
             logger.debug("Response code: " + str(response.status_code))
 
     def __upload_to_one_drive(self, url, file):
+        """
+        It uploads a file to OneDrive in chunks of 31.25MB
+
+        :param url: The URL of the upload session
+        :param file: The file to be uploaded
+        :return: the response from the server.
+        """
         f = open(file, 'rb')
         file_size = os.path.getsize(file)
         uploaded_bytes = 0
@@ -305,6 +367,14 @@ class OneDrive:
                            str(response.status_code) + "\nand content: " + response.content)
 
     def remove_old_files(self, file_name, one_drive_dir, encrypt, no_copies=3):
+        """
+        It removes old files from OneDrive
+
+        :param file_name: The name of the file to be backed up
+        :param one_drive_dir: The directory on OneDrive where the files are stored
+        :param encrypt: True/False
+        :param no_copies: The number of copies of the file you want to keep, defaults to 3 (optional)
+        """
         if one_drive_dir[0] == '/':
             one_drive_dir = one_drive_dir[1:]
         file_name = file_name.strip()
@@ -353,6 +423,15 @@ class OneDrive:
             logger.error(str(e))
 
     def __list_files_for_removal(self, file_name, one_drive_dir, encrypt):
+        """
+        It takes a file name, a directory, and a boolean value as input, and returns a list of files that match the file
+        name and the directory
+
+        :param file_name: The name of the file you want to remove
+        :param one_drive_dir: The directory in OneDrive where the file is located
+        :param encrypt: True or False
+        :return: A list of files that match the file name and encryption status.
+        """
         list_of_files = []
         try:
             headers = {
@@ -385,6 +464,7 @@ class OneDrive:
                     file_name, one_drive_dir, encrypt)
             else:
                 logger.error("Listing directories failed with status code: " +
+
                              str(response.status_code)
                              + " and response message: " + response.json())
 
@@ -394,6 +474,12 @@ class OneDrive:
         return list_of_files
 
     def __remove_file(self, one_drive_element):
+        """
+        It removes a file from OneDrive
+
+        :param one_drive_element: The OneDrive element that you want to remove
+        """
+
         try:
             headers = {
                 'Authorization': 'Bearer ' + self.tokens['access_token'],
@@ -413,11 +499,26 @@ class OneDrive:
             else:
                 logger.error("Error wile deleting file: " +
                              one_drive_element['name'] + " , with status code: " +
+
                              str(response.status_code))
         except Exception as e:
             logger.error(str(e))
 
     def keep_only_oldest_and_newest(self, file_name, one_drive_dir, encrypt):
+        """
+        It fetches a list of files from OneDrive, sorts them by date, and removes all but the newest and oldest files
+
+        :param file_name: The name of the file to be backed up
+        :param one_drive_dir: The directory on OneDrive where the files are located
+        :param encrypt: True/False
+        """
+        """
+        It fetches a list of files from OneDrive, sorts them by date, and removes all but the newest and oldest files
+        
+        :param file_name: The name of the file to be backed up
+        :param one_drive_dir: The directory on OneDrive where the files are located
+        :param encrypt: True/False
+        """
         if one_drive_dir[0] == '/':
             one_drive_dir = one_drive_dir[1:]
         file_name = file_name.strip()

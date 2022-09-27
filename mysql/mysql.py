@@ -7,28 +7,30 @@ from timeit import default_timer as timer
 logger = logging.getLogger("backup_logger")
 
 
-def mysqldump(database, user, password, dest, encrypt="False", enc_password=None, no_copies=3, one_drive=None, one_drive_dir=None):
-    """It takes database name with user and password and do dump to provided destination.
-       Also, if encryption is required via encrypt argument, dump can be encrypted.
-       Upload to OneDrive can be done with provided one_drive object, to one_drive_dir on One Drive.
-
-    Args:
-        database (string): Name of database
-        user (string): User with sufficient rights
-        password (string): Password for user
-        dest (string): Destination to store dump
-        encrypt (string): Encrypt dump (True or False)
-        enc_password (string): Password for encryption
-        no_copies (int): Number of dump copies
-        one_drive (OneDrive, optional): OneDrive object that is used to upload dump. Defaults to None.
-        one_drive_dir (string, optional): Directory on OneDrive. Defaults to None.
+def mysqldump(database, user, password, dest, encrypt="False", enc_password=None, no_copies=3, one_drive=None,
+              one_drive_dir=None):
     """
+    It takes a database name, user, password, destination directory, encryption password, number of copies to keep, and
+    OneDrive object and directory, and then dumps the database to a file in the destination directory, encrypts it if
+    encryption is enabled, and uploads it to OneDrive if OneDrive is enabled
+
+    :param database: The name of the database you want to backup
+    :param user: The user to connect to the database with
+    :param password: The password for the user you're using to connect to the database
+    :param dest: The directory where the backup will be stored
+    :param encrypt: If you want to encrypt the backup file, set this to True, defaults to False (optional)
+    :param enc_password: The password used to encrypt the backup file
+    :param no_copies: The number of copies you want to keep, defaults to 3 (optional)
+    :param one_drive: This is the OneDrive object that you created in the previous step
+    :param one_drive_dir: The directory in OneDrive where the backup will be stored
+    """
+
     try:
         file_name = 'mysqldump_' + database + \
                     '_' + utils.get_curr_date_time() + '.sql'
 
         mysqldump_cmd = ('/usr/bin/mysqldump -u ' + user +
-                         ' -p ' + password +
+                         ' -p' + password +
                          ' --single-transaction --quick --lock-tables=false ' +
                          database + ' > "' +
                          dest + '/' + file_name + '"')
@@ -74,75 +76,76 @@ def mysqldump(database, user, password, dest, encrypt="False", enc_password=None
         logger.error(e)
 
 
-def mysqldump_remote(hosts, databases, users, passwords, destinations, encrypts, enc_passwords, no_copies,
-                     one_drive=None, one_drive_dirs=None):
+def mysqldump_remote(host, database, user, password, destination, encrypt, enc_pass, no_copies,
+                     one_drive=None, one_drive_dir=None):
+    """
+    It takes a database name, a hostname, a username, a password, a destination directory, a boolean value for encryption,
+    an encryption password, a number of copies to keep, and an optional OneDrive object and OneDrive directory, and it dumps
+    the database to a file in the destination directory, encrypts it if encryption is enabled, removes old copies of the
+    database dump, and uploads the file to OneDrive if the OneDrive object is provided
+
+    :param host: The hostname or IP address of the remote server
+    :param database: The name of the database to backup
+    :param user: The user to connect to the database with
+    :param password: The password for the user
+    :param destination: The directory where the backup will be stored
+    :param encrypt: True/False
+    :param enc_pass: The password used to encrypt the backup file
+    :param no_copies: The number of copies to keep
+    :param one_drive: This is the OneDrive object that we created in the previous step
+    :param one_drive_dir: The directory in OneDrive where the backup will be stored
+    """
+
     try:
         logger.info("---------------------------------------")
         logger.info("start mysqldump")
         logger.info("---------------------------------------")
-        db_cnt = user_cnt = pw_cnt = dst_cnt = enc_cnt = enc_pw_cnt = odd_cnt = 0
-        for host in hosts:
-            file_name = 'mysqldump_' + databases[db_cnt] + '_' + host +\
-                        '_' + utils.get_curr_date_time() + '.sql'
+        file_name = 'mysqldump_' + database + '_' + host + \
+                    '_' + utils.get_curr_date_time() + '.sql'
 
-            mysqldump_cmd = ('/usr/bin/mysqldump -u ' + users[user_cnt] +
-                             ' -p' + passwords[pw_cnt] +
-                             ' --single-transaction --quick --lock-tables=false ' +
-                             databases[db_cnt] + ' > "' +
-                             destinations[dst_cnt] + '/' + file_name + '"')
-            mysqldump_cmd_log = ('/usr/bin/mysqldump -u ' + users[user_cnt] +
-                                 ' -p ************ --single-transaction --quick --lock-tables=false ' +
-                                 databases[db_cnt] + ' > "' +
-                                 destinations[dst_cnt] + '/' + file_name + '"')
+        mysqldump_cmd = ('/usr/bin/mysqldump -u ' + user +
+                         ' -p' + password +
+                         ' --single-transaction --quick --lock-tables=false ' +
+                         database + ' > "' +
+                         destination + '/' + file_name + '"')
+        mysqldump_cmd_log = ('/usr/bin/mysqldump -u ' + user +
+                             ' -p ************ --single-transaction --quick --lock-tables=false ' +
+                             database + ' > "' +
+                             destination + '/' + file_name + '"')
 
-            start = timer()
-            code, out, err = utils.run_remote(mysqldump_cmd, host, mysqldump_cmd_log)
-            end = timer()
-            if code > 0:
-                logger.error("Mysqldump failed with status code: " + str(code) + " Standard Error: " + err +
-                             ', Standard Output: ' + out)
-            else:
-                logger.info("Time took for mysqldump :" +
-                            str(timedelta(seconds=end - start)))
-                logger.info("Created file: " + file_name)
-                logger.debug("Directory for primary backup :" + destinations[dst_cnt])
-                if encrypts[enc_cnt] == 'True':
-                    file_management.encrypt_data(
-                        file_name=destinations[dst_cnt] + '/' + file_name,
-                        password=enc_passwords[enc_pw_cnt]
-                    )
-                    file_name = file_name + '.enc'
-
-                file_management.rmold_remote(
-                    host=host,
-                    dir=destinations[dst_cnt],
-                    name='mysqldump_' + databases[db_cnt],
-                    no_copies=no_copies,
-                    encrypt=encrypts[enc_cnt]
+        start = timer()
+        code, out, err = utils.run_remote(mysqldump_cmd, host, mysqldump_cmd_log)
+        end = timer()
+        if code > 0:
+            logger.error("Mysqldump failed with status code: " + str(code) + " Standard Error: " + err +
+                         ', Standard Output: ' + out)
+        else:
+            logger.info("Time took for mysqldump :" +
+                        str(timedelta(seconds=end - start)))
+            logger.info("Created file: " + file_name)
+            logger.debug("Directory for primary backup :" + destination)
+            if encrypt == 'True':
+                file_management.encrypt_data(
+                    file_name=destination + '/' + file_name,
+                    password=enc_pass
                 )
+                file_name = file_name + '.enc'
 
-            if one_drive is not None:
-                one_drive.upload_file(one_drive_dir=one_drive_dirs[odd_cnt],
-                                      local_dir=destinations[dst_cnt], file_name=file_name)
-                one_drive.remove_old_files(
-                    file_name='mysqldump_' + databases[db_cnt], one_drive_dir=one_drive_dirs[odd_cnt],
-                    encrypt=encrypts[enc_cnt],
-                    no_copies=no_copies)
+            file_management.rmold_remote(
+                host=host,
+                dir=destination,
+                name='mysqldump_' + database,
+                no_copies=no_copies,
+                encrypt=encrypt
+            )
 
-            if len(hosts) == len(databases):
-                db_cnt += 1
-            if len(hosts) == len(users):
-                user_cnt += 1
-            if len(hosts) == len(passwords):
-                pw_cnt += 1
-            if len(hosts) == len(destinations):
-                dst_cnt += 1
-            if len(hosts) == len(encrypts):
-                enc_cnt += 1
-            if len(hosts) == len(enc_passwords):
-                enc_pw_cnt += 1
-            if len(hosts) == len(one_drive_dirs):
-                odd_cnt += 1
+        if one_drive is not None:
+            one_drive.upload_file(one_drive_dir=one_drive_dir,
+                                  local_dir=destination, file_name=file_name)
+            one_drive.remove_old_files(
+                file_name='mysqldump_' + database, one_drive_dir=one_drive_dir,
+                encrypt=encrypt,
+                no_copies=no_copies)
 
     except Exception as e:
         logger.error(e)

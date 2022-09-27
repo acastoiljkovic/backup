@@ -10,17 +10,14 @@ logger = logging.getLogger("backup_logger")
 
 
 def run(cmd, cmd_log=None):
-    """Execute provided command
-
-    Args:
-        cmd_log (string): String that contains command for logging.
-        cmd (string): String that contains command and it's arguments
-
-    Returns: (consists of 3 variables)
-        int : return code after executing cmd
-        string : standard output
-        string : standard error
     """
+    It runs a command and returns the return code, stdout, and stderr
+
+    :param cmd: The command to be executed
+    :param cmd_log: This is the command that will be logged
+    :return: The return code, stdout, and stderr.
+    """
+
     if cmd_log is None:
         cmd_log = cmd
     try:
@@ -39,25 +36,35 @@ def run(cmd, cmd_log=None):
 
 
 def get_curr_date_time():
-    """Generate string of current time in format : YYYYmmDDHHMMSS    
-
-    Returns:
-        string : current time 
     """
+    It returns the current date and time in the format YYYYMMDDHHMMSS
+    :return: The current date and time in the format of YYYYMMDDHHMMSS
+    """
+
     return datetime.now().strftime("%Y%m%d%H%M%S")
 
 
-def run_remote(cmd, host, cmd_log=None):
-    """Execute provided command on remote machine
-
-    Args:
-        cmd (string): Command that will be executed
-        host (string): IP address or hostname of remote machine
-        cmd_log (string, optional): Command without visible passwords and sensible data . Defaults to None.
-
-    Returns:
-        _type_: _description_
+def get_curr_date_time_log_format():
     """
+    It returns the current date and time in the format: `YYYY-MM-DD HH:MM:SS,FFF`
+
+    The `FFF` part is the milliseconds
+    :return: The current date and time in the format of YYYY-MM-DD HH:MM:SS,FFF
+    """
+
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
+
+
+def run_remote(cmd, host, cmd_log=None):
+    """
+    It executes a command on a remote host and returns the output
+
+    :param cmd: The command to be executed on the remote host
+    :param host: The hostname or IP address of the remote server
+    :param cmd_log: This is the command that will be logged
+    :return: The return value is a tuple of three values:
+    """
+
     try:
         if cmd_log is None:
             cmd_log = cmd
@@ -97,14 +104,13 @@ def run_remote(cmd, host, cmd_log=None):
 
 
 def parse_time(exec_time):
-    """Extracting seconds, minutes, hours and days from provided string.
-
-    Args:
-        exec_time (string): Text that contains 4 values divided by "space"
-
-    Returns:
-        int,int,int,int: seconds, minutes, hours, days
     """
+    It takes a string of the form "* * * *" and returns a tuple of the form (seconds, minutes, hours, days)
+
+    :param exec_time: The time at which the job should be executed
+    :return: seconds, minutes, hours, days
+    """
+
     seconds = 0
     minutes = 0
     hours = 0
@@ -146,74 +152,78 @@ def parse_time(exec_time):
         return seconds, minutes, hours, days
 
 
-def schedule_job(func_name, seconds, minutes, hours, days):
-    """Schedule a job for provided function at provided time.
-
-    Args:
-        func_name (function): pass a function
-        seconds (int): seconds
-        minutes (int): minutes
-        hours (int): hours
-        days (int): days
+def schedule_job(func_name, seconds, minutes, hours, days, args):
     """
+    If the value of the parameter is 0, then the function will run every time the unit of time is incremented
+
+    :param func_name: The function to be scheduled
+    :param seconds: 0-59
+    :param minutes: 0-59
+    :param hours: 0-23
+    :param days: The number of days to wait
+    :param args: The arguments to pass to the function
+    """
+
     logger.info("Scheduling job for function: " + str(func_name.__name__))
-    logger.debug("Integer: Days: "+str(days)+" Hours: "+str(hours) + " Minutes: "+str(minutes) + " Seconds: "+str(seconds))
+    logger.debug(
+        "Integer: Days: " + str(days) + " Hours: " + str(hours) + " Minutes: " + str(minutes) + " Seconds: " + str(
+            seconds))
     seconds = str(seconds)
     minutes = str(minutes)
     hours = str(hours)
     days = str(days)
     if len(seconds) == 1:
-        seconds = '0'+seconds
+        seconds = '0' + seconds
     if len(minutes) == 1:
-        minutes = '0'+minutes
+        minutes = '0' + minutes
     if len(hours) == 1:
-        hours = '0'+hours
+        hours = '0' + hours
 
-    logger.info("Days: "+days+" Hours: "+hours + " Minutes: "+minutes + " Seconds: "+seconds)
+    logger.info("Days: " + days + " Hours: " + hours + " Minutes: " + minutes + " Seconds: " + seconds)
 
     if days == '0':
         if hours == '00':
             if minutes == '00':
                 if seconds == '00':
-                    schedule.every().second.do(func_name)
+                    schedule.every().second.do(func_name,args)
                 else:
-                    schedule.every(int(seconds)).seconds.do(func_name)
+                    schedule.every(int(seconds)).seconds.do(func_name,args)
             else:
                 if seconds == '00':
-                    schedule.every(int(minutes)).minutes.do(func_name)
+                    schedule.every(int(minutes)).minutes.do(func_name,args)
                 else:
-                    schedule.every(int(minutes)).minutes.at(':' + seconds).do(func_name)
+                    schedule.every(int(minutes)).minutes.at(':' + seconds).do(func_name,args)
         else:
             if minutes == '00':
                 if seconds == '00':
-                    schedule.every(int(hours)).hours.do(func_name)
+                    schedule.every(int(hours)).hours.do(func_name,args)
                 else:
-                    schedule.every(int(hours)).hours.at(':' + seconds).do(func_name)
+                    schedule.every(int(hours)).hours.at(':' + seconds).do(func_name,args)
             else:
                 if seconds == '00':
-                    schedule.every(int(hours)).hours.at(minutes + ':00').do(func_name)
+                    schedule.every(int(hours)).hours.at(minutes + ':00').do(func_name,args)
                 else:
-                    schedule.every(int(hours)).hours.at(minutes + ':' + seconds).do(func_name)
+                    schedule.every(int(hours)).hours.at(minutes + ':' + seconds).do(func_name,args)
     else:
         if hours == '00':
             if minutes == '00':
                 if seconds == '00':
-                    schedule.every(int(days)).days.do(func_name)
+                    schedule.every(int(days)).days.do(func_name,args)
                 else:
-                    schedule.every(int(days)).days.at('00:00:' + seconds).do(func_name)
+                    schedule.every(int(days)).days.at('00:00:' + seconds).do(func_name,args)
             else:
                 if seconds == '00':
-                    schedule.every(int(days)).days.at('00:' + minutes + ':00').do(func_name)
+                    schedule.every(int(days)).days.at('00:' + minutes + ':00').do(func_name,args)
                 else:
-                    schedule.every(int(days)).days.at('00:' + minutes + ':' + seconds).do(func_name)
+                    schedule.every(int(days)).days.at('00:' + minutes + ':' + seconds).do(func_name,args)
         else:
             if minutes == '00':
                 if seconds == '00':
-                    schedule.every(int(days)).days.at(hours + ':00:00').do(func_name)
+                    schedule.every(int(days)).days.at(hours + ':00:00').do(func_name,args)
                 else:
-                    schedule.every(int(days)).days.at(hours + ':00:' + seconds).do(func_name)
+                    schedule.every(int(days)).days.at(hours + ':00:' + seconds).do(func_name,args)
             else:
                 if seconds == '00':
-                    schedule.every(int(days)).days.at(hours + ':' + minutes + ':00').do(func_name)
+                    schedule.every(int(days)).days.at(hours + ':' + minutes + ':00').do(func_name,args)
                 else:
-                    schedule.every(int(days)).days.at(hours + ':' + minutes + ':' + seconds).do(func_name)
+                    schedule.every(int(days)).days.at(hours + ':' + minutes + ':' + seconds).do(func_name,args)

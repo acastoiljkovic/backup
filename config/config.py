@@ -1,592 +1,669 @@
 #!/usr/bin/python3
-
+import sys
 import configparser
 import os
+import logging
+import logging.handlers
+import utils.utils
+import glob
+
+logger = logging.getLogger("backup_logger")
 
 
 # > This class is used to store configuration data for the application
 class ConfigurationData:
-    """Class that load configuration from file
-    """
 
     def __init__(
             self,
-            no_copies=0,
+            no_copies=3,
+            log_file='/var/log/backup',
             log_level='INFO',
-            log_path='/var/log/backup/',
-            exec_time=None,
-            remote_mysql=None,
-            remote_sync=None,
-            remote_backup_dirs=None,
-            backup_mysql=False,
-            user_mysql=None,
-            password_mysql=None,
+            exec_time='* * * *',
+            mysql_config=None,
+            elastic_config=None,
+            dirs_config=None,
+            rsync_config=None,
+            onedrive_config=None
+    ):
+        """
+        This class contains all important data for doing backup.
+
+        :param no_copies: number of copies to keep, defaults to 3 (optional)
+        :param log_file: The path to the log file, defaults to /var/log/backup (optional)
+        :param log_level: The level of logging, defaults to INFO (optional)
+        :param exec_time: The time when the backup should be executed, defaults to * * * * (optional)
+        :param mysql_config: a list of dictionaries, each dictionary containing the following keys:
+        :param elastic_config: A list of Elasticsearch instances to backup
+        :param dirs_config: a list of dictionaries, each dictionary contains the following keys:
+        :param rsync_config: This is a list of dictionaries. Each dictionary contains the following keys:
+        :param onedrive_config: This is the configuration for the onedrive client
+        """
+        self.no_copies = no_copies
+        self.log_file = log_file
+        self.log_level = log_level
+        self.exec_time = exec_time
+        self.onedrive_config = onedrive_config
+        if mysql_config is None:
+            self.mysql_config = []
+        if elastic_config is None:
+            self.elastic_config = []
+        if dirs_config is None:
+            self.dirs_config = []
+        if rsync_config is None:
+            self.rsync_config = []
+        self.logger = logging.getLogger("backup_logger")
+
+    def load_config(self, path):
+        """
+        It reads a config file and populates the object with the values
+
+        :param path: The path to the configuration file
+        """
+        self.logger.info("Config file: " + path)
+        if not os.path.exists(path):
+            self.logger.error("Configuration file '" + path + "' doesn't exists!")
+            self.logger.info("Exiting the application...")
+            quit()
+        config_parser = configparser.RawConfigParser()
+        config_parser.read(path)
+
+        if config_parser.has_section('mysqldump_remote'):
+            self.logger.debug("Contains mysqldump_remote")
+            mysql_config = MysqlConfig()
+            mysql_config.no_copies = config_parser.get(
+                'mysqldump_remote', 'no_copies', fallback=self.no_copies)
+            mysql_config.host = config_parser.get(
+                'mysqldump_remote', 'host', fallback=None)
+            if mysql_config.host is not None:
+                mysql_config.host.strip()
+            mysql_config.user = config_parser.get(
+                'mysqldump_remote', 'user', fallback=None)
+            mysql_config.password = config_parser.get(
+                'mysqldump_remote', 'password', fallback=None)
+            mysql_config.database = config_parser.get(
+                'mysqldump_remote', 'database', fallback=None)
+            mysql_config.destination = config_parser.get(
+                'mysqldump_remote', 'destination', fallback='')
+            mysql_config.encrypt = config_parser.get(
+                'mysqldump_remote', 'encrypt', fallback='')
+            mysql_config.enc_pass = config_parser.get(
+                'mysqldump_remote', 'enc_pass', fallback='')
+            mysql_config.upload_to_onedrive = config_parser.get(
+                'mysqldump_remote', 'upload_to_onedrive', fallback='False')
+            mysql_config.drive_dir = config_parser.get(
+                'mysqldump_remote', 'drive_dir', fallback='')
+            mysql_config.exec_time = config_parser.get(
+                'mysqldump_remote', 'exec_time', fallback=self.exec_time)
+            self.mysql_config.append(mysql_config)
+
+        if config_parser.has_section("mysql"):
+            self.logger.debug("Contains mysql")
+            mysql_config = MysqlConfig()
+            mysql_config.no_copies = config_parser.get(
+                'mysql', 'no_copies', fallback=self.no_copies)
+            mysql_config.user = config_parser.get(
+                'mysql', 'user', fallback=None)
+            mysql_config.password = config_parser.get(
+                'mysql', 'password', fallback=None)
+            mysql_config.database = config_parser.get(
+                'mysql', 'database', fallback=None)
+            mysql_config.destination = config_parser.get(
+                'mysql', 'destination', fallback='')
+            mysql_config.encrypt = config_parser.get(
+                'mysql', 'encrypt', fallback='')
+            mysql_config.enc_pass = config_parser.get(
+                'mysql', 'enc_pass', fallback='')
+            mysql_config.upload_to_onedrive = config_parser.get(
+                'mysql', 'upload_to_onedrive', fallback='False')
+            mysql_config.drive_dir = config_parser.get(
+                'mysql', 'drive_dir', fallback='')
+            mysql_config.exec_time = config_parser.get(
+                'mysql', 'exec_time', fallback=self.exec_time)
+            self.mysql_config.append(mysql_config)
+
+        if config_parser.has_section('sync_remote'):
+            self.logger.debug("Contains sync_remote")
+            rsync_config = RsyncConfig()
+            rsync_config.host = config_parser.get(
+                'sync_remote', 'host', fallback='')
+            if rsync_config.host is not None:
+                rsync_config.host.strip()
+            rsync_config.src = config_parser.get(
+                'sync_remote', 'src', fallback='')
+            rsync_config.dst = config_parser.get(
+                'sync_remote', 'dst', fallback='')
+            rsync_config.exec_time = config_parser.get(
+                'sync_remote', 'exec_time', fallback=self.exec_time)
+            self.rsync_config.append(rsync_config)
+
+        if config_parser.has_section('sync'):
+            self.logger.debug("Contains sync")
+            rsync_config = RsyncConfig()
+            rsync_config.src = config_parser.get(
+                'sync', 'src', fallback='')
+            rsync_config.dst = config_parser.get(
+                'sync', 'dst', fallback='')
+            rsync_config.exec_time = config_parser.get(
+                'sync', 'exec_time', fallback=self.exec_time)
+            self.rsync_config.append(rsync_config)
+
+        if config_parser.has_section('dirs2backup_remote'):
+            self.logger.debug("Contains dirs2backup_remote")
+            dirs_config = DirConfig()
+            dirs_config.no_copies = config_parser.get(
+                'dirs2backup_remote', 'no_copies', fallback=self.no_copies)
+            dirs_config.host = config_parser.get(
+                'dirs2backup_remote', 'host', fallback='')
+            if dirs_config.host is not None:
+                dirs_config.host.strip()
+            dirs_config.path = config_parser.get(
+                'dirs2backup_remote', 'path', fallback='')
+            dirs_config.destination = config_parser.get(
+                'dirs2backup_remote', 'destination', fallback='')
+            dirs_config.encrypt = config_parser.get(
+                'dirs2backup_remote', 'encrypt', fallback='')
+            dirs_config.enc_pass = config_parser.get(
+                'dirs2backup_remote', 'enc_pass', fallback='')
+            dirs_config.backup_type = config_parser.get(
+                'dirs2backup_remote', 'backup_type', fallback='')
+            dirs_config.upload_to_onedrive = config_parser.get(
+                'dirs2backup_remote', 'upload_to_onedrive', fallback='False')
+            dirs_config.drive_dir = config_parser.get(
+                'dirs2backup_remote', 'drive_dir', fallback='')
+            dirs_config.exec_time = config_parser.get(
+                'dirs2backup_remote', 'exec_time', fallback=self.exec_time)
+            self.dirs_config.append(dirs_config)
+
+        if config_parser.has_section('dirs2backup'):
+            self.logger.debug("Contains dirs2backup")
+            dirs_config = DirConfig()
+            dirs_config.no_copies = config_parser.get(
+                'dirs2backup', 'no_copies', fallback=self.no_copies)
+            dirs_config.path = config_parser.get(
+                'dirs2backup', 'path', fallback='')
+            dirs_config.destination = config_parser.get(
+                'dirs2backup', 'destination', fallback='')
+            dirs_config.encrypt = config_parser.get(
+                'dirs2backup', 'encrypt', fallback='')
+            dirs_config.enc_pass = config_parser.get(
+                'dirs2backup', 'enc_pass', fallback='')
+            dirs_config.backup_type = config_parser.get(
+                'dirs2backup', 'backup_type', fallback='')
+            dirs_config.upload_to_onedrive = config_parser.get(
+                'dirs2backup', 'upload_to_onedrive', fallback='False')
+            dirs_config.drive_dir = config_parser.get(
+                'dirs2backup', 'drive_dir', fallback='')
+            dirs_config.exec_time = config_parser.get(
+                'dirs2backup', 'exec_time', fallback=self.exec_time)
+            self.dirs_config.append(dirs_config)
+
+        if config_parser.has_section("elasticsearch"):
+            self.logger.debug("Contains elasticsearch")
+            elastic_config = ElasticConfig()
+            elastic_config.url = config_parser.get(
+                'elasticsearch', 'url', fallback="127.0.0.1:9200")
+            elastic_config.full = config_parser.get('elasticsearch', 'full', fallback="False")
+            elastic_config.index = config_parser.get('elasticsearch', 'index', fallback="")
+            elastic_config.location = config_parser.get(
+                'elasticsearch', 'location', fallback="/tmp")
+            elastic_config.repo = config_parser.get('elasticsearch', 'repo', fallback="")
+            elastic_config.user = config_parser.get(
+                'elasticsearch', 'user', fallback="elastic")
+            elastic_config.password = config_parser.get(
+                'elasticsearch', 'password', fallback="")
+            elastic_config.remove_old = config_parser.get(
+                'elasticsearch', 'remove_old', fallback='False')
+            elastic_config.exec_time = config_parser.get(
+                'elasticsearch', 'exec_time', fallback=self.exec_time)
+            self.elastic_config.append(elastic_config)
+
+        if config_parser.has_section('onedrive'):
+            self.logger.debug("Contains onedrive")
+            onedrive = OneDriveConfig()
+            onedrive.client_secret = config_parser.get(
+                'onedrive', 'client_secret', fallback='')
+            onedrive.client_id = config_parser.get(
+                'onedrive', 'client_id', fallback='')
+            onedrive.tenant_id = config_parser.get(
+                'onedrive', 'tenant_id', fallback='')
+            onedrive.scopes = config_parser.get(
+                'onedrive', 'scopes', fallback="").split(';')
+            onedrive.tokens_file = config_parser.get(
+                'onedrive', 'tokens_file', fallback='/etc/backup/tokens.json')
+            if self.onedrive_config is not None:
+                logger.warning("OneDrive config exists in main file and will be overwritten!")
+                self.onedrive_config = onedrive
+            else:
+                self.onedrive_config = onedrive
+
+    def print_formatted(self):
+        """
+        It prints the configuration of the object
+        """
+        if self.onedrive_config is not None:
+            # for onedrive in self.onedrive_config:
+            self.logger.debug(self.onedrive_config.formatted())
+        if self.elastic_config is not None:
+            for elastic in self.elastic_config:
+                self.logger.debug(elastic.formatted())
+        if self.mysql_config is not None:
+            for mysql in self.mysql_config:
+                self.logger.debug(mysql.formatted())
+        if self.dirs_config is not None:
+            for dirs in self.dirs_config:
+                self.logger.debug(dirs.formatted())
+        if self.rsync_config is not None:
+            for rsync in self.rsync_config:
+                self.logger.debug(rsync.formatted())
+
+
+class MysqlConfig:
+
+    def __init__(
+            self,
+            no_copies=3,
+            host=None,
+            user=None,
+            password=None,
             database=None,
-            dump_dest=None,
-            file_prefix=None,
-            encrypt_mysql=False,
-            encrypt_mysql_password='e!f@k',
-            onedrive_mysql_dir=None,
-            backup_dirs=False,
-            paths=None,
             destination=None,
-            encrypt_dirs=False,
-            encrypt_dirs_password='e!f@k',
-            backup_type='Full',
-            onedrive_backup_dir=None,
-            backup_es=False,
-            es_url=None,
-            es_full=False,
-            es_index=None,
-            es_location=None,
-            es_repo=None,
-            es_user=None,
-            es_password=None,
-            es_remove_old=False,
-            es_restore=False,
-            sync_dirs=False,
+            encrypt='False',
+            enc_pass=None,
+            upload_to_onedrive='False',
+            drive_dir=None,
+            exec_time='* * * *',
+            onedrive=None
+    ):
+        self.no_copies = no_copies
+        self.host = host
+        self.user = user
+        self.password = password
+        self.database = database
+        self.destination = destination
+        self.encrypt = encrypt
+        self.enc_pass = enc_pass
+        self.upload_to_onedrive = upload_to_onedrive
+        self.drive_dir = drive_dir
+        self.exec_time = exec_time
+        self.onedrive = onedrive
+
+    def formatted(self):
+        if self.host is not None:
+            formatted = """
+        [mysqldump_remote]
+        no_copies           = {0}
+        host                = {1}
+        user                = {2}
+        password            = **********************
+        database            = {3}
+        destination         = {4}
+        encrypt             = {5}
+        enc_pass            = ***************
+        upload_to_onedrive  = {6}
+        drive_dir           = {7}
+        exec_time           = {8}
+            """.format(
+                self.no_copies,
+                self.host,
+                self.user,
+                self.database,
+                self.destination,
+                self.encrypt,
+                self.upload_to_onedrive,
+                self.drive_dir,
+                self.exec_time
+            )
+        else:
+            formatted = """
+        [mysql]
+        no_copies           = {0}
+        user                = {1}
+        password            = **********************
+        database            = {2}
+        destination         = {3}
+        encrypt             = {4}
+        enc_pass            = ***************
+        upload_to_onedrive  = {5}
+        drive_dir           = {6}
+        exec_time           = {7}
+            """.format(
+                self.no_copies,
+                self.user,
+                self.database,
+                self.destination,
+                self.encrypt,
+                self.upload_to_onedrive,
+                self.drive_dir,
+                self.exec_time
+            )
+        return formatted
+
+
+class DirConfig:
+
+    def __init__(
+            self,
+            no_copies=3,
+            path=None,
+            host=None,
+            destination=None,
+            backup_type='full',
+            encrypt='False',
+            enc_pass=None,
+            upload_to_onedrive='False',
+            drive_dir=None,
+            exec_time='* * * *',
+            onedrive=None
+    ):
+        self.no_copies = no_copies
+        self.path = path
+        self.host = host
+        self.destination = destination
+        self.backup_type = backup_type
+        self.encrypt = encrypt
+        self.enc_pass = enc_pass
+        self.upload_to_onedrive = upload_to_onedrive
+        self.drive_dir = drive_dir
+        self.exec_time = exec_time
+        self.onedrive = onedrive
+
+    def formatted(self):
+        if self.host is not None:
+            formatted = """
+        [dirs2backup_remote]
+        no_copies           = {0}
+        host                = {1}
+        host                = {2}
+        destination         = {3}
+        encrypt             = {4}
+        enc_pass            = ***************
+        backup_type         = {5}
+        upload_to_onedrive  = {6}
+        drive_dir           = {7}
+        exec_time           = {8}
+            """.format(
+                self.no_copies,
+                self.host,
+                self.path,
+                self.destination,
+                self.encrypt,
+                self.backup_type,
+                self.upload_to_onedrive,
+                self.drive_dir,
+                self.exec_time
+            )
+        else:
+            formatted = """
+        [dirs2backup]
+        no_copies           = {0}
+        path                = {1}
+        destination         = {2}
+        encrypt             = {3}
+        enc_pass            = ***************
+        backup_type         = {4}
+        upload_to_onedrive  = {5}
+        drive_dir           = {6}
+        exec_time           = {7}
+            """.format(
+                self.no_copies,
+                self.path,
+                self.destination,
+                self.encrypt,
+                self.backup_type,
+                self.upload_to_onedrive,
+                self.drive_dir,
+                self.exec_time
+            )
+
+        return formatted
+
+
+class RsyncConfig:
+
+    def __init__(
+            self,
+            host=None,
             src=None,
             dst=None,
-            upload_to_onedrive=False,
-            client_secret=None,
-            client_id=None,
-            tenant_id=None,
-            scopes=None,
-            tokens_file=None,
-            sync_hosts=None,
-            sync_remote_src=None,
-            sync_remote_dst=None,
-            mysqldump_hosts=None,
-            mysqldump_users=None,
-            mysqldump_passwords=None,
-            mysqldump_databases=None,
-            mysqldump_dump_dest=None,
-            mysqldump_file_prefixes=None,
-            mysqldump_encrypt=None,
-            mysqldump_encrypt_passwords=None,
-            mysqldump_one_drive_dirs=None,
-            dirs2backup_hosts=None,
-            dirs2backup_paths=None,
-            dirs2backup_destinations=None,
-            dirs2backup_encrypt=None,
-            dirs2backup_encrypt_passwords=None,
-            dirs2backup_backup_type=None,
-            dirs2backup_one_drive_dirs=None,
-            mysqldump_exec_time=None,
-            dirs2backup_exec_time=None,
-            elasticsearch_exec_time=None,
-            sync_exec_time=None,
-            mysqldump_remote_exec_time=None,
-            sync_remote_exec_time=None,
-            dirs2backup_remote_exec_time=None,
+            exec_time='* * * *'
     ):
-
-        """
-        A constructor for the class.
-
-        :param no_copies: Number of backup copies to keep, defaults to 0 (optional)
-        :param log_level: The level of logging, defaults to INFO (optional)
-        :param backup_mysql: Do you want to backup a mysql database?, defaults to False (optional)
-        :param user_mysql: The user to connect to the MySQL database
-        :param password_mysql: Password for mysql
-        :param database: The name of the database to backup
-        :param dump_dest: The destination for the mysqldump file
-        :param file_prefix: This is the prefix of the file name
-        :param encrypt_mysql: If True, the mysqldump will be encrypted with the password in encrypt_mysql_password, defaults
-        to False (optional)
-        :param encrypt_mysql_password: Password for encrypting the mysqldump file, defaults to e!f@k (optional)
-        :param onedrive_mysql_dir: The directory on OneDrive where the mysqldump will be uploaded
-        :param backup_dirs: If True, the directories specified in the paths parameter will be backed up, defaults to False
-        (optional)
-        :param paths: The paths to backup
-        :param destination: The destination directory for the backup
-        :param encrypt_dirs: If True, the backup will be encrypted, defaults to False (optional)
-        :param encrypt_dirs_password: Password for encrypting directories, defaults to e!f@k (optional)
-        :param backup_type: Full, Incremental, Differential, defaults to Full (optional)
-        :param onedrive_backup_dir: The directory on OneDrive where you want to store the backup
-        :param backup_es: If True, Elasticsearch will be backed up, defaults to False (optional)
-        :param es_url: The URL of the Elasticsearch cluster
-        :param es_full: If True, the entire Elasticsearch database will be backed up. If False, only the specified index
-        will be backed up, defaults to False (optional)
-        :param es_index: The name of the index to backup
-        :param es_location: The location where the Elasticsearch backup will be stored
-        :param es_repo: The name of the repository to create
-        :param es_user: Elasticsearch user
-        :param es_password: Password for elasticsearch
-        :param es_remove_old: If you want to remove old backups from the elasticsearch repository, defaults to False
-        (optional)
-        :param es_restore: If you want to restore an elasticsearch backup, set this to True, defaults to False (optional)
-        :param sync_dirs: If True, the script will sync the src and dst directories, defaults to False (optional)
-        :param src: The source directory to sync from
-        :param dst: The destination directory for the sync
-        :param upload_to_onedrive: If True, the script will upload the backup files to OneDrive, defaults to False
-        (optional)
-        :param client_secret: The client secret you got from the app registration portal
-        :param client_id: The client ID of your app
-        :param tenant_id: The ID of the Azure Active Directory tenant that you want to use for authentication
-        :param scopes: The scopes for which you want to get an access token
-        :param tokens_file: The file where the tokens are stored
-        :param sync_hosts: List of hosts to sync
-        :param sync_remote_src: The source directory on the remote host
-        :param sync_remote_dst: The destination directory on the remote host
-        :param mysqldump_hosts: List of hosts to do mysqldump on
-        :param mysqldump_users: List of users for mysqldump
-        :param mysqldump_passwords: The password for the mysql user
-        :param mysqldump_databases: The databases to backup
-        :param mysqldump_dump_dest: The destination for the mysqldump
-        :param mysqldump_file_prefixes: The prefix for the mysqldump file
-        :param mysqldump_encrypt: If True, the mysqldump will be encrypted
-        :param mysqldump_encrypt_passwords: The password to encrypt the mysqldump file
-        :param mysqldump_one_drive_dirs: The directory on OneDrive where the mysqldump will be uploaded
-        :param dirs2backup_hosts: List of hosts to backup directories from
-        :param dirs2backup_paths: The directories to backup
-        :param dirs2backup_destinations: The destination directory for the backup
-        :param dirs2backup_encrypt: If True, the backup will be encrypted
-        :param dirs2backup_encrypt_passwords: The password to use for encrypting the backup
-        :param dirs2backup_backup_type: This is the type of backup to be done. It can be either 'Full' or 'Incremental'
-        :param dirs2backup_one_drive_dirs: The directory on OneDrive where the backup will be uploaded
-        """
-        # GENERAL
-        #
-        if sync_hosts is None:
-            sync_hosts = []
-        if sync_remote_src is None:
-            sync_remote_src = []
-        if sync_remote_dst is None:
-            sync_remote_dst = []
-        if mysqldump_hosts is None:
-            mysqldump_hosts = []
-        if mysqldump_users is None:
-            mysqldump_users = []
-        if mysqldump_passwords is None:
-            mysqldump_passwords = []
-        if mysqldump_databases is None:
-            mysqldump_databases = []
-        if mysqldump_dump_dest is None:
-            mysqldump_dump_dest = []
-        if mysqldump_file_prefixes is None:
-            mysqldump_file_prefixes = []
-        if mysqldump_encrypt is None:
-            mysqldump_encrypt = []
-        if mysqldump_encrypt_passwords is None:
-            mysqldump_encrypt_passwords = []
-        if mysqldump_one_drive_dirs is None:
-            mysqldump_one_drive_dirs = []
-        if dirs2backup_hosts is None:
-            dirs2backup_hosts = []
-        if dirs2backup_paths is None:
-            dirs2backup_paths = []
-        if dirs2backup_destinations is None:
-            dirs2backup_destinations = []
-        if dirs2backup_encrypt is None:
-            dirs2backup_encrypt = []
-        if dirs2backup_encrypt_passwords is None:
-            dirs2backup_encrypt_passwords = []
-        if dirs2backup_backup_type is None:
-            dirs2backup_backup_type = []
-        if dirs2backup_one_drive_dirs is None:
-            dirs2backup_one_drive_dirs = []
-        self.no_copies = no_copies
-        self.backup_mysql = backup_mysql
-        self.backup_dirs = backup_dirs
-        self.sync_dirs = sync_dirs
-        self.upload_to_onedrive = upload_to_onedrive
-        self.log_level = log_level
-        self.log_path = log_path
-        self.remote_backup_dirs = remote_backup_dirs
-        self.remote_sync = remote_sync
-        self.remote_mysql = remote_mysql
-        self.exec_time = exec_time
-
-        # MYSQL
-        #
-        self.user_mysql = user_mysql
-        self.password_mysql = password_mysql
-        self.database = database
-        self.dump_destination = dump_dest
-        self.file_prefix = file_prefix
-        self.encrypt_mysql = encrypt_mysql
-        self.encrypt_mysql_password = encrypt_mysql_password
-        self.onedrive_mysql_dir = onedrive_mysql_dir
-        self.mysqldump_exec_time = mysqldump_exec_time
-
-        # DIRS2BACKUP
-        #
-        self.paths = paths
-        self.destination = destination
-        self.encrypt_dirs = encrypt_dirs
-        self.encrypt_dirs_password = encrypt_dirs_password
-        self.backup_type = backup_type
-        self.onedrive_backup_dir = onedrive_backup_dir
-        self.dirs2backup_exec_time = dirs2backup_exec_time
-
-        # ELASTICSEARCH
-        #
-        self.backup_es = backup_es
-        self.es_url = es_url
-        self.es_full = es_full
-        self.es_index = es_index
-        self.es_location = es_location
-        self.es_repo = es_repo
-        self.es_user = es_user
-        self.es_password = es_password
-        self.es_remove_old = es_remove_old
-        self.es_restore = es_restore
-        self.elasticsearch_exec_time = elasticsearch_exec_time
-
-        # SYNC
-        #
+        self.host = host
         self.src = src
         self.dst = dst
-        self.sync_exec_time = sync_exec_time
+        self.exec_time = exec_time
 
-        # ONEDRIVE
-        #
+    def formatted(self):
+        if self.host is not None:
+            formatted = """
+        [sync_remote]
+        host                = {0}
+        src                 = {1}
+        dst                 = {2}
+        exec_time           = {3}
+            """.format(
+                self.host,
+                self.src,
+                self.dst,
+                self.exec_time
+            )
+        else:
+            formatted = """
+        [sync]
+        src                 = {0}
+        dst                 = {1}
+        exec_time           = {2}
+            """.format(
+                self.src,
+                self.dst,
+                self.exec_time
+            )
+        return formatted
+
+
+class OneDriveConfig:
+
+    def __init__(
+            self,
+            client_secret=None,
+            client_id=None,
+            tenant_id='common',
+            scopes=None,
+            token_file='/etc/backup/tokens.json'
+    ):
         self.client_secret = client_secret
         self.client_id = client_id
         self.tenant_id = tenant_id
         self.scopes = scopes
-        self.tokens_file = tokens_file
+        self.token_file = token_file
 
-        # SYNC REMOTE
-        #
-        self.sync_hosts = sync_hosts
-        self.sync_remote_src = sync_remote_src
-        self.sync_remote_dst = sync_remote_dst
-        self.sync_remote_exec_time = sync_remote_exec_time
+    def formatted(self):
+        formatted = """
+        [onedrive]
+        client_secret       = ************************
+        client_id           = {0}
+        tenant_id           = {1}
+        scopes              = {2}
+        tokens_file         = {3}
+        """.format(
+            self.client_id,
+            self.tenant_id,
+            self.scopes,
+            self.token_file
+        )
+        return formatted
 
-        # MYSQLDUMP REMOTE
-        #
-        self.mysqldump_hosts = mysqldump_hosts
-        self.mysqldump_users = mysqldump_users
-        self.mysqldump_passwords = mysqldump_passwords
-        self.mysqldump_databases = mysqldump_databases
-        self.mysqldump_dump_dest = mysqldump_dump_dest
-        self.mysqldump_file_prefixes = mysqldump_file_prefixes
-        self.mysqldump_encrypt = mysqldump_encrypt
-        self.mysqldump_encrypt_passwords = mysqldump_encrypt_passwords
-        self.mysqldump_one_drive_dirs = mysqldump_one_drive_dirs
-        self.mysqldump_remote_exec_time = mysqldump_remote_exec_time
 
-        # DIRS2BACKUP REMOTE
-        #
-        self.dirs2backup_hosts = dirs2backup_hosts
-        self.dirs2backup_paths = dirs2backup_paths
-        self.dirs2backup_destinations = dirs2backup_destinations
-        self.dirs2backup_encrypt = dirs2backup_encrypt
-        self.dirs2backup_encrypt_passwords = dirs2backup_encrypt_passwords
-        self.dirs2backup_backup_type = dirs2backup_backup_type
-        self.dirs2backup_one_drive_dirs = dirs2backup_one_drive_dirs
-        self.dirs2backup_remote_exec_time = dirs2backup_remote_exec_time
+class ElasticConfig:
 
-    def load_data(self, path):
-        """Load data from file at path provided as argument of this method
+    def __init__(
+            self,
+            url=None,
+            index=None,
+            full='True',
+            location=None,
+            repo=None,
+            user=None,
+            password=None,
+            remove_old='True',
+            exec_time='* * * *'
+    ):
+        self.url = url
+        self.full = full
+        self.index = index
+        self.location = location
+        self.repo = repo
+        self.user = user
+        self.password = password
+        self.remove_old = remove_old
+        self.exec_time = exec_time
 
-        Args:
-            path (string): absolute or relative path to the configuration file
-        """
-        print("\nConfig file: " + path)
-        if not os.path.exists(path):
-            print("ERROR: configuration file '" + path + "' doesn't exists!\n")
-            print("Exiting the application...")
-            quit()
-        config_parser = configparser.RawConfigParser()
-        config_parser.read(path)
-        for s in config_parser.get('general', 'no_copies', fallback="0").split():
-            if s.isdigit():
-                self.no_copies = s
-        if not self.no_copies:
-            self.no_copies = 1
+    def formatted(self):
+        formatted = """
+        [elasticsearch]
+        url                 = {0}
+        full                = {1}
+        index               = {2}
+        location            = {3}
+        repo                = {4}
+        user                = {5} 
+        password            = ************
+        remove_old          = {6}
+        exec_time           = {7}
+        """.format(
+            self.url,
+            self.full,
+            self.index,
+            self.location,
+            self.repo,
+            self.user,
+            self.remove_old,
+            self.exec_time
+        )
+        return formatted
 
-        self.log_level = config_parser.get(
-            'general', 'log_level', fallback='INFO')
-        self.log_path = config_parser.get(
-            'general', 'log_path', fallback='INFO')
-        self.remote_mysql = config_parser.get(
-            'general', 'remote_mysql', fallback='False')
-        self.remote_sync = config_parser.get(
-            'general', 'remote_sync', fallback='False')
-        self.remote_backup_dirs = config_parser.get(
-            'general', 'remote_backup_dirs', fallback='False')
-        self.exec_time = config_parser.get(
-            'general', 'exec_time', fallback='INFO')
 
-        # MYSQL
-        #
-        self.backup_mysql = config_parser.get(
-            'general', 'backup_mysql', fallback='False')
-        self.user_mysql = config_parser.get('mysql', 'user', fallback='')
-        self.password_mysql = config_parser.get(
-            'mysql', 'password', fallback='')
-        self.database = config_parser.get('mysql', 'database', fallback='')
-        self.dump_destination = config_parser.get(
-            'mysql', 'destination', fallback="")
-        self.file_prefix = config_parser.get(
-            'mysql', 'file_prefix', fallback='')
-        self.encrypt_mysql = config_parser.get(
-            'mysql', 'encrypt', fallback=False)
-        self.encrypt_mysql_password = config_parser.get(
-            'mysql', 'enc_pass', fallback='')
-        self.onedrive_mysql_dir = config_parser.get(
-            'mysql', 'drive_dir', fallback='')
-        self.mysqldump_exec_time = config_parser.get(
-            'mysql', 'exec_time', fallback=None)
+def load_configuration(path='/etc/backup/backup.cnf'):
+    """
+    It reads the configuration file and returns a list of objects of type ConfData
 
-        # DIRS2BACKUP
-        #
-        self.backup_dirs = config_parser.get(
-            'general', 'backup_dirs', fallback='False')
-        self.paths = config_parser.get(
-            'dirs2backup', 'path', fallback="").split(';')
-        self.destination = config_parser.get('dirs2backup',
-                                             'destination', fallback="").split(';')
-        self.encrypt_dirs = config_parser.get(
-            'dirs2backup', 'encrypt', fallback='False')
-        self.encrypt_dirs_password = config_parser.get(
-            'dirs2backup', 'enc_pass', fallback='')
-        self.backup_type = config_parser.get(
-            'dirs2backup', 'backup_type', fallback='fUll')
-        self.onedrive_backup_dir = config_parser.get(
-            'dirs2backup', 'drive_dir', fallback='')
-        self.dirs2backup_exec_time = config_parser.get(
-            'dirs2backup', 'exec_time', fallback=None)
+    :param path: The path to the configuration file, defaults to /etc/backup/backup.cnf (optional)
+    """
+    print("\n" + utils.utils.get_curr_date_time_log_format() + "  INFO: Config file: " + path)
+    if not os.path.exists(path):
+        print(
+            utils.utils.get_curr_date_time_log_format() + "  ERROR: configuration file '" + path + "' doesn't exists!\n")
+        print(utils.utils.get_curr_date_time_log_format() + "  INFO: Exiting the application...")
+        quit()
+    config_parser = configparser.RawConfigParser()
+    config_parser.read(path)
+    for s in config_parser.get('general', 'no_copies', fallback="3").split():
+        if s.isdigit():
+            no_copies = s
+        else:
+            no_copies = 3
+    log_level = config_parser.get(
+        'general', 'log_level', fallback='INFO')
+    log_path = config_parser.get(
+        'general', 'log_path', fallback='/var/log/backup')
+    exec_time = config_parser.get(
+        'general', 'exec_time', fallback='* * * *')
+    include = config_parser.get(
+        'general', 'include', fallback=None)
+    if include is not None:
+        include.strip()
 
-        # ELASTICSEARCH
-        #
-        self.backup_es = config_parser.get(
-            'general', 'backup_es', fallback='False')
-        self.es_url = config_parser.get(
-            'elasticsearch', 'es_url', fallback="127.0.0.1:9200")
-        self.es_full = config_parser.get('elasticsearch', 'full', fallback=False)
-        self.es_index = config_parser.get('elasticsearch', 'index', fallback="")
-        self.es_location = config_parser.get(
-            'elasticsearch', 'location', fallback="/tmp")
-        self.es_repo = config_parser.get('elasticsearch', 'repo', fallback="")
-        self.es_user = config_parser.get(
-            'elasticsearch', 'user', fallback="elastic")
-        self.es_password = config_parser.get(
-            'elasticsearch', 'password', fallback="")
-        self.es_remove_old = config_parser.get(
-            'elasticsearch', 'remove_old', fallback='False')
-        self.es_restore = config_parser.get(
-            'elasticsearch', 'restore', fallback='False')
-        self.elasticsearch_exec_time = config_parser.get(
-            'elasticsearch', 'exec_time', fallback=None)
+    init_logger(log_level, log_path)
 
-        # SYNC
-        #
-        self.sync_dirs = config_parser.get(
-            'general', 'sync_dirs', fallback=False)
-        self.src = config_parser.get('sync', 'src', fallback='')
-        self.dst = config_parser.get('sync', 'dst', fallback='')
-        self.sync_exec_time = config_parser.get(
-            'sync', 'exec_time', fallback=None)
+    onedrive = None
 
-        # ONEDRIVE
-        #
-        self.upload_to_onedrive = config_parser.get(
-            'general', 'up2onedrive', fallback='False')
-        self.client_secret = config_parser.get(
+    if config_parser.has_section('onedrive'):
+        onedrive = OneDriveConfig()
+        onedrive.client_secret = config_parser.get(
             'onedrive', 'client_secret', fallback='')
-        self.client_id = config_parser.get(
+        onedrive.client_id = config_parser.get(
             'onedrive', 'client_id', fallback='')
-        self.tenant_id = config_parser.get(
+        onedrive.tenant_id = config_parser.get(
             'onedrive', 'tenant_id', fallback='')
-        self.scopes = config_parser.get(
+        onedrive.scopes = config_parser.get(
             'onedrive', 'scopes', fallback="").split(';')
-        self.tokens_file = config_parser.get(
+        onedrive.tokens_file = config_parser.get(
             'onedrive', 'tokens_file', fallback='/etc/backup/tokens.json')
 
-        # SYNC REMOTE
-        #
-        self.sync_hosts = config_parser.get(
-            'sync_remote', 'hosts', fallback='').strip().split(';')
-        self.sync_remote_src = config_parser.get(
-            'sync_remote', 'src', fallback='').split(';')
-        self.sync_remote_dst = config_parser.get(
-            'sync_remote', 'dst', fallback='').split(';')
-        self.sync_remote_exec_time = config_parser.get(
-            'sync_remote', 'exec_time', fallback=None)
+    formatted = """
+        [genera]
+        no_copies   = {0}
+        log_level   = {1}
+        log_path    = {2}
+        exec_time   = {3}
+        include     = {4}
+        """.format(
+        no_copies,
+        log_level,
+        log_path,
+        exec_time,
+        include
+    )
 
-        # MYSQLDUMP REMOTE
-        #
-        self.mysqldump_hosts = config_parser.get(
-            'mysqldump_remote', 'hosts', fallback='').strip().split(';')
-        self.mysqldump_users = config_parser.get(
-            'mysqldump_remote', 'user', fallback='').split(';')
-        self.mysqldump_passwords = config_parser.get(
-            'mysqldump_remote', 'password', fallback='').split(';')
-        self.mysqldump_databases = config_parser.get(
-            'mysqldump_remote', 'database', fallback='').split(';')
-        self.mysqldump_dump_dest = config_parser.get(
-            'mysqldump_remote', 'destination', fallback='').split(';')
-        self.mysqldump_file_prefixes = config_parser.get(
-            'mysqldump_remote', 'file_prefix', fallback='').split(';')
-        self.mysqldump_encrypt = config_parser.get(
-            'mysqldump_remote', 'encrypt', fallback='').split(';')
-        self.mysqldump_encrypt_passwords = config_parser.get(
-            'mysqldump_remote', 'enc_pass', fallback='').split(';')
-        self.mysqldump_one_drive_dirs = config_parser.get(
-            'mysqldump_remote', 'drive_dir', fallback='').split(';')
-        self.mysqldump_remote_exec_time = config_parser.get(
-            'mysqldump_remote', 'exec_time', fallback=None)
+    logger.debug(formatted)
 
-        # DIRS2BACKUP REMOTE
-        #
-        self.dirs2backup_hosts = config_parser.get('dirs2backup_remote', 'hosts', fallback='').strip().split(';')
-        self.dirs2backup_paths = config_parser.get('dirs2backup_remote', 'path', fallback='').split(';')
-        self.dirs2backup_destinations = config_parser.get('dirs2backup_remote', 'destination', fallback='').split(';')
-        self.dirs2backup_encrypt = config_parser.get('dirs2backup_remote', 'encrypt', fallback='').split(';')
-        self.dirs2backup_encrypt_passwords = config_parser.get('dirs2backup_remote', 'enc_pass', fallback='').split(';')
-        self.dirs2backup_backup_type = config_parser.get('dirs2backup_remote', 'backup_type', fallback='').split(';')
-        self.dirs2backup_one_drive_dirs = config_parser.get('dirs2backup_remote', 'drive_dir', fallback='').split(';')
-        self.dirs2backup_remote_exec_time = config_parser.get('dirs2backup_remote', 'exec_time', fallback=None)
+    return get_conf_data(include, no_copies, log_level, log_path, exec_time, onedrive),no_copies,log_level,log_path,exec_time,include,onedrive
 
-        print("\nConfiguration data loaded successfully!\n")
 
-    def get_all_formatted(self):
-        formatted = """
-        [general]
-        no_copies           = {0}
-        backup_mysql        = {1}
-        backup_dirs         = {2}
-        backup_es           = {3}
-        sync_dir            = {4}
-        up2onedrive         = {5}
-        remote_sync         = {46}
-        remote_mysql        = {47}
-        remote_backup_dirs  = {48}
-        log_level           = {6}
-        log_path            = {49}
-        exec_time           = {50}
+def get_conf_data(include, no_copies, log_level, log_path, exec_time, onedrive):
+    """
+    It takes in a bunch of arguments, and returns a list of objects of type ConfigurationData
 
-        [mysql]
-        user        = {7}
-        password    = ************
-        database    = {8}
-        mysqldump   = {9}
-        file_prefix = {10}
-        encrypt     = {11}
-        enc_pass    = ************
-        driveDir    = {12}
-        exec_time   = {51}
+    :param include: The path to the configuration file
+    :param no_copies: The number of copies to keep
+    :param log_level: The level of logging to use
+    :param log_path: The path to the log file
+    :param exec_time: The time to execute the backup
+    :param onedrive: This is the onedrive configuration data
+    :return: A list of ConfigurationData objects.
+    """
+    conf_data = []
+    if include is None or include == '':
+        logger.warning("There is no include directive! ")
+    else:
+        for file in glob.glob(include):
+            data = ConfigurationData(no_copies, log_level, log_path, exec_time, onedrive_config=onedrive)
+            data.load_config(file)
+            conf_data.append(data)
+            data.print_formatted()
 
-        [dirs2backup]
-        path        = {13}
-        destination = {14}
-        encrypt     = {15}
-        backup_type = {16}
-        enc_pass    = ************
-        driveDir    = {17}
-        exec_time   = {52}
+    return conf_data
 
-        [elasticsearch]
-        es_url      = {18}
-        index       = {19}
-        location    = {20}
-        repo        = {21}
-        user        = {22} 
-        password    = ************
-        remove_old  = {23}
-        exec_time   = {53}
 
-        [sync]
-        src         = {24}
-        dst         = {25}
-        exec_time   = {54}
+def init_logger(log_level, log_path):
+    """
+    It initializes the logger with the given log level and log path
 
-        [onedrive]
-        client_secret   = ************************
-        client_id       = {26}
-        tenant_id       = {27}
-        scopes          = {28}
-        tokens_file     = {29}
-        
-        [sync_remote]
-        hosts       = {30}
-        src         = {31}
-        dst         = {32}
-        exec_time   = {55}
-        
-        [mysqldump_remote]
-        hosts       = {33}
-        user 	 	= {34}
-        password 	= **********************
-        database 	= {35}
-        destination	= {36}
-        file_prefix	= {37}
-        encrypt		= {38}
-        enc_pass	= ***************
-        driveDir    = {39}
-        exec_time   = {56}
-        
-        [dirs2backup_remote]
-        hosts       = {40}
-        paths   	= {41}
-        destination	= {42}
-        encrypt		= {43}
-        enc_pass	= ***************
-        backup_type = {44}
-        driveDir    = {45}
-        exec_time   = {57}
-        
-        """.format(self.no_copies,
-                   self.backup_mysql,
-                   self.backup_dirs,
-                   self.backup_es,
-                   self.sync_dirs,
-                   self.upload_to_onedrive,
-                   self.log_level,
-                   self.user_mysql,
-                   self.database,
-                   self.dump_destination,
-                   self.file_prefix,
-                   self.encrypt_mysql,
-                   self.onedrive_mysql_dir,
-                   self.paths,
-                   self.destination,
-                   self.encrypt_dirs,
-                   self.backup_type,
-                   self.onedrive_backup_dir,
-                   self.es_url,
-                   self.es_index,
-                   self.es_location,
-                   self.es_repo,
-                   self.es_user,
-                   self.es_remove_old,
-                   self.src,
-                   self.dst,
-                   self.client_id,
-                   self.tenant_id,
-                   self.scopes,
-                   self.tokens_file,
-                   self.sync_hosts,
-                   self.sync_remote_src,
-                   self.sync_remote_dst,
-                   self.mysqldump_hosts,
-                   self.mysqldump_users,
-                   self.mysqldump_databases,
-                   self.mysqldump_dump_dest,
-                   self.mysqldump_file_prefixes,
-                   self.mysqldump_encrypt,
-                   self.mysqldump_one_drive_dirs,
-                   self.dirs2backup_hosts,
-                   self.dirs2backup_paths,
-                   self.dirs2backup_destinations,
-                   self.dirs2backup_encrypt,
-                   self.dirs2backup_backup_type,
-                   self.dirs2backup_one_drive_dirs,
-                   self.remote_sync,
-                   self.remote_mysql,
-                   self.remote_backup_dirs,
-                   self.log_path,
-                   self.exec_time,
-                   self.mysqldump_exec_time,
-                   self.dirs2backup_exec_time,
-                   self.elasticsearch_exec_time,
-                   self.sync_exec_time,
-                   self.sync_remote_exec_time,
-                   self.mysqldump_remote_exec_time,
-                   self.dirs2backup_remote_exec_time,
-                   )
-        return formatted
+    :param log_level: This is the level of logging you want to do. It can be DEBUG, INFO, WARNING, ERROR, or CRITICAL
+    :param log_path: The path where the log file will be created
+    """
+    try:
+        console_handler = logging.StreamHandler(stream=sys.stdout)
+        if log_level.upper() == 'DEBUG':
+            logger.setLevel(logging.DEBUG)
+            console_handler.setLevel(logging.DEBUG)
+        elif log_level.upper() == 'INFO':
+            logger.setLevel(logging.INFO)
+            console_handler.setLevel(logging.INFO)
+        elif log_level.upper() == 'WARNING':
+            logger.setLevel(logging.WARNING)
+            console_handler.setLevel(logging.WARNING)
+        elif log_level.upper() == 'ERROR':
+            logger.setLevel(logging.ERROR)
+            console_handler.setLevel(logging.ERROR)
+        elif log_level.upper() == 'CRITICAL':
+            logger.setLevel(logging.CRITICAL)
+            console_handler.setLevel(logging.CRITICAL)
+        formatter = logging.Formatter('%(asctime)s  %(levelname)s: %(message)s')
+        console_handler.setFormatter(formatter)
+        rotate_handler = logging.handlers.RotatingFileHandler("{0}/{1}.log".format(log_path, "system"),
+                                                              maxBytes=1048576, backupCount=5)
+        rotate_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+        logger.addHandler(rotate_handler)
+    except Exception as e:
+        print(utils.utils.get_curr_date_time_log_format() + " ERROR: while initializing logger : " + str(e))
