@@ -551,16 +551,16 @@ def load_configuration(path='/etc/backup/backup.cnf'):
     print("\n" + utils.utils.get_curr_date_time_log_format() + "  INFO: Config file: " + path)
     if not os.path.exists(path):
         print(
-            utils.utils.get_curr_date_time_log_format() + "  ERROR: configuration file '" + path + "' doesn't exists!\n")
+            utils.utils.get_curr_date_time_log_format() + "  ERROR: configuration file '" +
+            path + "' doesn't exists!\n")
         print(utils.utils.get_curr_date_time_log_format() + "  INFO: Exiting the application...")
         quit()
     config_parser = configparser.RawConfigParser()
     config_parser.read(path)
+    no_copies = 3
     for s in config_parser.get('general', 'no_copies', fallback="3").split():
         if s.isdigit():
             no_copies = s
-        else:
-            no_copies = 3
     log_level = config_parser.get(
         'general', 'log_level', fallback='INFO')
     log_path = config_parser.get(
@@ -606,7 +606,17 @@ def load_configuration(path='/etc/backup/backup.cnf'):
 
     logger.debug(formatted)
 
-    return get_conf_data(include, no_copies, log_level, log_path, exec_time, onedrive),no_copies,log_level,log_path,exec_time,include,onedrive
+    conf_data = []
+
+    if include is None or include == '':
+        data = ConfigurationData(no_copies, log_level, log_path, exec_time, onedrive_config=onedrive)
+        data.load_config(path)
+        conf_data.append(data)
+        data.print_formatted()
+    else:
+        conf_data = get_conf_data(include, no_copies, log_level, log_path, exec_time, onedrive)
+
+    return conf_data, no_copies, log_level, log_path, exec_time, include, onedrive
 
 
 def get_conf_data(include, no_copies, log_level, log_path, exec_time, onedrive):

@@ -17,7 +17,8 @@ no_copies = 3
 
 def mysql_module(mysql_conf):
     from mysql import mysql
-    if mysql_conf.host is None or mysql_conf.host == '' or mysql_conf.host == '127.0.0.1' or mysql_conf.host == 'localhost':
+    if mysql_conf.host is None or \
+            mysql_conf.host == '' or mysql_conf.host == '127.0.0.1' or mysql_conf.host == 'localhost':
         if mysql_conf.upload_to_onedrive.upper() == 'True':
             mysql.mysqldump(
                 database=mysql_conf.database,
@@ -188,7 +189,9 @@ def targz_module(dirs):
                 )
         else:
             logger.warning(
-                "Remote_backup_dirs is True, but the specified backup_type isn't proper. Please check configuration file!")
+                "Remote_backup_dirs is True, "
+                "but the specified backup_type isn't proper. "
+                "Please check configuration file!")
     else:
         if dirs.backup_type.upper() == "INCREMENTAL":
             if dirs.upload_to_onedrive.upper() == 'True':

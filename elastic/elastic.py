@@ -6,16 +6,18 @@ from datetime import timedelta
 
 logger = logging.getLogger("backup_logger")
 
+"""
+Necessary configuration for Elasticsearch:
 
-# add shared file system repo
+- add shared file system repo and restart Elasticsearch
 # sudo echo 'path.repo: ["/mnt/es_backup"]' >> /etc/elasticsearch/elasticsearch.yml
 # sudo chown -R elasticsearch: /mnt/es_backup/
 # sudo systemctl restart elasticsearch
-
+"""
 
 def create_repo(es_url, repo_name, location, auth):
     """
-    Create repo in Elasticsearch.
+    Create Repository in Elasticsearch.
 
     :param es_url: The URL of the Elasticsearch cluster
     :param repo_name: The name of the repository
