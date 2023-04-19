@@ -1,0 +1,230 @@
+#####################################
+### Configuration file for backup ###
+#####################################
+
+### Section general ###
+[general]
+### Number of copies to save for each backup
+no_copies	= 3
+
+###Logging level (DEBUG,INFO,WARNING,ERROR)
+#log_level   = INFO
+log_level   = DEBUG
+log_path    = /var/log/backup
+
+### schedule execution time
+### if you dont provide this parameter, system will do only one cycle
+### s m h d
+### s-second, m-minute, h-hour, d-day
+### 4 * means run again immediately
+exec_time       = * * * *
+
+include         = /etc/backup/conf.d/*.cnf
+
+### Section for MySQL ### 
+# if backup_mysql is false you don't need to provide this section 
+[mysql]
+### MySQL user that can do mysqldump
+user 	 	= test
+
+### Password for MySQL user
+password 	= teskasifra1
+
+### Database that will be dumped
+database 	= test
+
+### Directory to store MySQL dump
+destination	= /data/mysqldump
+
+### Encrypting backup file 
+encrypt		= False
+
+### Password for encryption
+enc_pass	= 'sifrazaenkripciju'
+
+### Directory on OneDrive where backup will be stored.
+### If up2onedrive is False you don't need to provide.
+drive_dir    = /backup/mysqldump
+
+### schedule execution time
+exec_time       = * * * *
+
+### Section for compressing dirs ###
+# if backup_dirs is false you don't need to provide this section 
+[dirs2backup]
+### Array of directories that will be backuped
+path		= /data/es/;/data/mysqldump/
+
+### Array of destinations where to store backups
+destination	= /data/backup;/data/backup1
+
+### Encrypting backup files
+encrypt		= False
+
+### Password for encryption
+enc_pass	= 'sifrazaenkripciju'
+
+### Type of backup, supported types are full, differential, incremental
+backup_type = differential
+
+### Directory on OneDrive where backup will be stored.
+### If up2onedrive is False you don't need to provdide.
+drive_dir    = /backup/important-dirs
+
+### schedule execution time
+exec_time       = * * * *
+
+
+
+### Section for Elasticsearch ###
+[elasticsearch]
+### URL to elasticsearch cluster
+es_url      = http://162.55.48.151:9200
+
+### Full backup or only specific index 
+full        = True
+
+### Index name, you don't need to provide this if previous field is True 
+#index       = company
+
+### Location on disk where snapshots will be stored
+location    = /data/es
+
+### Repo name in Elasticsearch where snapshots will be stored 
+repo        = es_backup
+
+### User to login 
+user        = elastic
+
+### Password for provided user 
+password    = X98jWcHly4eeRM_lB9Lr
+
+### Remove old snapshots
+remove_old  = True
+
+### schedule execution time
+exec_time       = * * * *
+
+
+### Section for synchronizing directories ###
+[sync]
+### Source directory
+src			= /data
+
+### Destination directory
+dst			= /data2
+
+### schedule execution time
+exec_time       = * * * *
+
+### Section for OneDrive ###
+[onedrive]
+### Client secret gained from Application
+client_secret   = 
+
+### Client ID (Application ID)
+client_id       = 
+
+### Tenant ID 
+# Elfak = f5501f2a-b2b9-4122-8f2d-aa0f0366d907
+tenant_id       = common
+
+### Permissions that will be granted
+scopes          = User.Read;Files.ReadWrite.All;
+
+### File to store access and refresh tokens
+file            = ./tokens.json
+
+### schedule execution time
+exec_time       = * * * *
+
+
+### NOTE ###
+# In order to execute remote backup, system assume that 
+# ssh keys are exchanged with server for root user
+# permissions. Commands that can achieve above are provided below:
+# if you don't have ssh key, it can be generated using next command
+# ssh-keygen 
+# to exchange keys with the server use next command :
+# put server IP in place of 127.0.0.1
+# ssh-copy-id root@127.0.0.1 
+
+### Section for remote mysqldump ###
+### Execute mysqldump to remote machines
+[mysqldump_remote]
+### Host on which mysqldump will be executed
+host       = 157.90.114.55
+### MySQL users that can do mysqldump
+user 	 	= moodledb
+
+### Password for MySQL user
+password 	= teskasifra1
+
+### Database that will be dumped
+database 	= moodle
+
+### Directory to store MySQL dump
+destination	= /data/mysqldump
+
+### Prefix for backup file
+file_prefix	= moodle
+
+### Encrypting backup file 
+encrypt		= True
+
+### Password for encryption
+enc_pass	= 'sifrazaenkripciju'
+
+### Directory on OneDrive where backup will be stored.
+### If up2onedrive is False you don't need to provide.
+drive_dir    = /backup/mysqldump
+
+### schedule execution time
+exec_time       = * * * *
+
+
+### section for remote rsync ###
+### Execute rsync on remote hosts 
+[sync_remote]
+### List of hosts on which rsync will be executed
+host       = 157.90.114.55
+
+### Source directory
+src			= /data
+
+### Destination directory
+dst			= /data2
+
+### schedule execution time
+exec_time       = * * * *
+
+
+
+### Section for remote targz ###
+### Execute targz on remote hosts
+[dirs2backup_remote]
+### List of hosts on which targz will be executed
+host       = 157.90.114.55
+
+### Array of directories to do backup
+path		= /data/es
+
+### Array of destinations where to store backups
+destination	= /data/backup
+
+### Encrypting backup files
+encrypt		= False
+
+### Password for encryption
+enc_pass	= 'sifrazaenkripciju'
+
+### Type of backup, supported types are full, differential, incremental
+backup_type = incremental
+
+### Directory on OneDrive where backup will be stored.
+### If up2onedrive is False you don't need to provide.
+drive_dir    = /backup/cs-important-dirs
+
+### schedule execution time
+exec_time       = * * * *
+

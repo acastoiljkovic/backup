@@ -1,0 +1,5 @@
+[general]
+log_level   = DEBUG
+log_path    = /var/log/backup
+include     = /etc/backup/conf.d/*.cnf
+
