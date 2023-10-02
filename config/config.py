@@ -241,7 +241,6 @@ class ConfigurationData:
         It prints the configuration of the object
         """
         if self.onedrive_config is not None:
-            # for onedrive in self.onedrive_config:
             self.logger.debug(self.onedrive_config.formatted())
         if self.elastic_config is not None:
             for elastic in self.elastic_config:
@@ -343,17 +342,17 @@ class DirConfig:
 
     def __init__(
             self,
-            no_copies=3,
-            path=None,
-            host=None,
-            destination=None,
-            backup_type='full',
-            encrypt='False',
-            enc_pass=None,
-            upload_to_onedrive='False',
-            drive_dir=None,
-            exec_time='* * * *',
-            onedrive=None
+no_copies=3,
+path=None,
+host=None,
+destination=None,
+backup_type='full',
+encrypt='False',
+enc_pass=None,
+upload_to_onedrive='False',
+drive_dir=None,
+exec_time='* * * *',
+onedrive=None
     ):
         self.no_copies = no_copies
         self.path = path

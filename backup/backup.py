@@ -19,7 +19,7 @@ def mysql_module(mysql_conf):
     from mysql import mysql
     if mysql_conf.host is None or \
             mysql_conf.host == '' or mysql_conf.host == '127.0.0.1' or mysql_conf.host == 'localhost':
-        if mysql_conf.upload_to_onedrive.upper() == 'True':
+        if mysql_conf.upload_to_onedrive.upper() == 'True' and onedrive is not None:
             mysql.mysqldump(
                 database=mysql_conf.database,
                 user=mysql_conf.user,
@@ -44,7 +44,7 @@ def mysql_module(mysql_conf):
                 one_drive_dir=None
             )
     else:
-        if mysql_conf.upload_to_onedrive.upper() == 'True':
+        if mysql_conf.upload_to_onedrive.upper() == 'True' and onedrive is not None:
             mysql.mysqldump_remote(
                 host=mysql_conf.host,
                 user=mysql_conf.user,
@@ -125,7 +125,7 @@ def targz_module(dirs):
         dirs.destination = dirs.destination.split(';')
     if dirs.host is not None:
         if dirs.backup_type.upper() == "INCREMENTAL":
-            if dirs.upload_to_onedrive.upper() == 'True':
+            if dirs.upload_to_onedrive.upper() == 'TRUE' and onedrive is not None:
                 targz.targz_incremental_remote(
                     host=dirs.host,
                     paths=dirs.path,
@@ -146,7 +146,7 @@ def targz_module(dirs):
                     one_drive_dir=None
                 )
         elif dirs.backup_type.upper() == "DIFFERENTIAL":
-            if dirs.upload_to_onedrive.upper() == 'True':
+            if dirs.upload_to_onedrive.upper() == 'TRUE' and onedrive is not None:
                 targz.targz_differential_remote(
                     host=dirs.host,
                     paths=dirs.path,
@@ -167,7 +167,7 @@ def targz_module(dirs):
                     one_drive_dir=None
                 )
         elif dirs.backup_type.upper() == "FULL":
-            if dirs.upload_to_onedrive.upper() == 'True':
+            if dirs.upload_to_onedrive.upper() == 'TRUE' and onedrive is not None:
                 targz.targz_remote(
                     host=dirs.host,
                     paths=dirs.path,
@@ -194,7 +194,7 @@ def targz_module(dirs):
                 "Please check configuration file!")
     else:
         if dirs.backup_type.upper() == "INCREMENTAL":
-            if dirs.upload_to_onedrive.upper() == 'True':
+            if dirs.upload_to_onedrive.upper() == 'TRUE' and onedrive is not None:
                 targz.targz_incremental(
                     paths=dirs.path,
                     destinations=dirs.destination,
@@ -213,7 +213,7 @@ def targz_module(dirs):
                     one_drive_dir=None,
                 )
         elif dirs.backup_type.upper() == "DIFFERENTIAL":
-            if dirs.upload_to_onedrive.upper() == 'True':
+            if dirs.upload_to_onedrive.upper() == 'TRUE' and onedrive is not None:
                 targz.targz_differential(
                     paths=dirs.path,
                     destinations=dirs.destination,
@@ -232,7 +232,7 @@ def targz_module(dirs):
                     one_drive_dir=None,
                 )
         elif dirs.backup_type.upper() == "FULL":
-            if dirs.upload_to_onedrive.upper() == 'True':
+            if dirs.upload_to_onedrive.upper() == 'TRUE' and onedrive is not None:
                 targz.targz(
                     paths=dirs.path,
                     destinations=dirs.destination,
@@ -351,7 +351,6 @@ def reload():
     global include
 
     config_data = config.get_conf_data(include, no_copies, log_level, log_path, exec_time, one_drive_general)
-
     for conf in config_data:
         onedrive = one_drive.OneDrive(
             client_secret=conf.onedrive_config.client_secret,

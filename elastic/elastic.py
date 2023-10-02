@@ -15,6 +15,7 @@ Necessary configuration for Elasticsearch:
 # sudo systemctl restart elasticsearch
 """
 
+
 def create_repo(es_url, repo_name, location, auth):
     """
     Create Repository in Elasticsearch.
@@ -112,8 +113,8 @@ def create_snapshot_of_index(es_url, repo, index, auth):
 
 def delete_snapshot(es_url, repo, snapshot, auth):
     """
-    It takes the Elasticsearch URL, the repository name, the snapshot name, and the authentication credentials as arguments,
-    and then deletes the snapshot
+    It takes the Elasticsearch URL, the repository name, the snapshot name, and the authentication credentials as
+    arguments, and then deletes the snapshot
 
     :param es_url: The URL of the Elasticsearch cluster
     :param repo: The name of the repository to use

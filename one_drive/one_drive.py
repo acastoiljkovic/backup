@@ -180,14 +180,14 @@ class OneDrive:
             'Content-Type': 'application/x-www-form-urlencoded'
         }
 
-        new_tokens = requests.post(url=self.__TOKENS_BASE_URL, data={
+        self.tokens = requests.post(url=self.__TOKENS_BASE_URL, data={
             'client_id': self.client_id,
-            'scope': self.scopes,
-            'refresh_token': self.tokens['refresh_token'],
-            'grant_type': 'refresh_token',
+            'scope': scope_post,
+            'code': code,
+            'grant_type': 'authorization_code',
             'client_secret': self.client_secret
         }, headers=headers
-                                   ).json()
+                                    ).json()
 
         if self.tokens['access_token'] != new_tokens['access_token']:
             self.tokens['access_token'] = new_tokens['access_token']
