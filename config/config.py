@@ -565,7 +565,7 @@ def load_configuration(path='/etc/backup/backup.cnf'):
     log_path = config_parser.get(
         'general', 'log_path', fallback='/var/log/backup')
     exec_time = config_parser.get(
-        'general', 'exec_time', fallback='* * * *')
+        'general', 'exec_time', fallback=None)
     include = config_parser.get(
         'general', 'include', fallback=None)
     if include is not None:
