@@ -323,14 +323,15 @@ def run(path):
 
     config_data, no_copies, log_level, log_path, exec_time, include, onedrive = config.load_configuration(path)
     for conf in config_data:
-        onedrive = one_drive.OneDrive(
-            client_secret=conf.onedrive_config.client_secret,
-            client_id=conf.onedrive_config.client_id,
-            scopes=conf.onedrive_config.scopes,
-            tokens_file=conf.onedrive_config.tokens_file,
-            tenant_id=conf.onedrive_config.tenant_id,
-        )
-        onedrive.check_tokens()
+        if onedrive is not None:
+            onedrive = one_drive.OneDrive(
+                client_secret=conf.onedrive_config.client_secret,
+                client_id=conf.onedrive_config.client_id,
+                scopes=conf.onedrive_config.scopes,
+                tokens_file=conf.onedrive_config.tokens_file,
+                tenant_id=conf.onedrive_config.tenant_id,
+            )
+            onedrive.check_tokens()
         if conf.exec_time is None:
             run_modules(conf)
         else:
