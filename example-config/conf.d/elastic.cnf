@@ -1,0 +1,30 @@
+### Section for Elasticsearch ###
+### NOTE ###
+# In order to perform
+[elasticsearch]
+### URL to elasticsearch cluster
+es_url      = http://192.168.0.15:9200
+
+### Full backup or only specific index
+full        = True
+
+### Index name, you don't need to provide this if previous field is True
+#index       = company
+
+### Location on disk where snapshots will be stored
+location    = /data/es
+
+### Repo name in Elasticsearch where snapshots will be stored
+repo        = es_backup
+
+### User to login
+user        = elastic
+
+### Password for provided user
+password    = samplepassword
+
+### Remove old snapshots
+remove_old  = True
+
+### schedule execution time
+exec_time       = * * * *

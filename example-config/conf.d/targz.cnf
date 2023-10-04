@@ -1,0 +1,71 @@
+
+### Section for compressing dirs ###
+[dirs2backup]
+### Array of directories that will be backuped
+path		= /data/es/;/data/mysqldump/
+
+### Array of destinations where to store backups
+destination	= /data/backup;/data/backup1
+
+### Encrypting backup files
+encrypt		= False
+
+### Password for encryption
+enc_pass	= 'encryptionpassword'
+
+### Type of backup, supported types are full, differential, incremental
+backup_type = differential
+
+### Directory on OneDrive where backup will be stored.
+### If up2onedrive is False you don't need to provide.
+drive_dir    = /backup/important-dirs
+
+### schedule execution time
+exec_time       = * * * *
+
+
+### Section for remote Targz ###
+### NOTE ###
+# 1.    In order to execute remote backup, system assume that
+#       ssh keys are exchanged with server for root user
+#       permissions. Commands that can achieve above are provided below:
+#       if you don't have ssh key, it can be generated using next command
+#       ssh-keygen
+#       to exchange keys with the server use next command :
+#       put server IP in place of 192.168.0.15
+#       ssh-copy-id root@192.168.0.15
+# 2.    Also you will have to create NFS server either on remote server
+#       or on local machine or some third machine, and to mount that NFS Share
+#       at the same path on each of them.
+#       IE. Destination directory '/data/es' is the first in the list and this directory
+#       on remote server had to be mounted same as local directory '/data/es'
+#       in order to perform encryption tasks and cleanup old files or upload to OneDrive.
+#       WARNING: If you don't provide shared storage in any form,
+#       backup will still be created, but every single time that system
+#       perform backup a new file will be generated. System will log error and proceed to work.
+
+[dirs2backup_remote]
+### List of hosts on which targz will be executed
+host       = 192.168.0.15
+
+### Array of directories to do backup
+path		= /data/es;/data/test
+
+### Array of destinations where to store backups
+destination	= /data/backup;/data2/backup
+
+### Encrypting backup files
+encrypt		= False
+
+### Password for encryption
+enc_pass	= 'encryptionpassword'
+
+### Type of backup, supported types are full, differential, incremental
+backup_type = incremental
+
+### Directory on OneDrive where backup will be stored.
+### If up2onedrive is False you don't need to provide.
+drive_dir    = /backup/important-dirs
+
+### schedule execution time
+exec_time       = * * * *

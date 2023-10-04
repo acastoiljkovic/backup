@@ -1,0 +1,16 @@
+### Section for OneDrive ###
+[onedrive]
+### Client secret gained from Application
+client_secret   =
+
+### Client ID (Application ID)
+client_id       =
+
+### Tenant ID
+tenant_id       = common
+
+### Permissions that will be granted
+scopes          = User.Read;Files.ReadWrite.All;
+
+### File to store access and refresh tokens
+file            = /etc/backup/tokens.json

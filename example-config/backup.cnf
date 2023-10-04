@@ -1,5 +1,23 @@
+#####################################
+### Configuration file for backup ###
+#####################################
+
 [general]
-log_level   = DEBUG
+### The verbosity level you want to be logged
+log_level   = INFO
+
+### Directory where logs should be saved
 log_path    = /var/log/backup
+
+### Pattern that will be used in order to find other configuration files
 include     = /etc/backup/conf.d/*.cnf
+
+### If you dont specify exec_time system will perform only one full cycle,
+### do a backup of everything specified in config and close.
+### If you want to schedule execution of jobs you have to specify this parameter.
+### Inside any section you can override this parameter
+### s m h d
+### s-second, m-minute, h-hour, d-day
+### 4 * means run again immediately
+#exec_time  = * * * *
 
