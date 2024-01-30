@@ -29,7 +29,7 @@ class OneDrive:
         Args:
             client_secret (string): Client secret gained form Microsoft application
             client_id (string): Client ID gained from Microsoft application
-            scopes (array): Array of Microsoft scopes ie. ['User.Read']
+            scopes (array): Array of Microsoft scopes i.e. ['User.Read']
             tokens (json, optional): JSON object that contains access and refresh tokens. Defaults to None.
             tokens_file (str, optional): File where JSON tokes will be stored. Defaults to './tokens.json'.
             tenant_id (string, optional): Microsoft Tenant ID where your application is being deployd.
@@ -96,11 +96,10 @@ class OneDrive:
 
     def check_tokens(self):
         """
-        If the tokens are not None, check if the access token is not None, if it is not None, check if the refresh token is
-        not None, if it is not None, make a request to the API to check if the tokens are valid, if the response is 200, the
-        tokens are valid, if the response is 401, the tokens are expired, if the response is anything else, there's an
-        unexpected error
-        :return: a boolean value.
+        If the tokens are not None, check if the access token is not None, if it is not None, check if the refresh
+        token is not None, if it is not None, make a request to the API to check if the tokens are valid,
+        if the response is 200, the tokens are valid, if the response is 401, the tokens are expired, if the response
+        is anything else, there's an unexpected error :return: a boolean value.
         """
         if self.tokens is not None:
             if self.tokens['access_token'] is not None:
@@ -131,8 +130,8 @@ class OneDrive:
 
     def get_tokens(self, redirection_url):
         """
-        It takes the redirection url, parses the code from it, and then sends a POST request to the tokens base url with the
-        client id, scope, code, grant type, and client secret
+        It takes the redirection url, parses the code from it, and then sends a POST request to the tokens base url
+        with the client id, scope, code, grant type, and client secret
 
         :param redirection_url: The URL that the user is redirected to after they have logged in and authorized your
         application
@@ -176,18 +175,23 @@ class OneDrive:
         """
         It takes the refresh token from the tokens.json file, and uses it to request a new access token
         """
+        # code = parse_qs(urlparse(redirection_url).query)['code'][0]
+        scope_post = ''
+        for scope in self.scopes:
+            if scope != "":
+                scope_post += scope + ' '
+        scope_post = scope_post[:-1]
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
 
-        self.tokens = requests.post(url=self.__TOKENS_BASE_URL, data={
+        new_tokens = requests.post(url=self.__TOKENS_BASE_URL, data={
             'client_id': self.client_id,
             'scope': scope_post,
-            'code': code,
+            # 'code': code,
             'grant_type': 'authorization_code',
             'client_secret': self.client_secret
-        }, headers=headers
-                                    ).json()
+        }, headers=headers).json()
 
         if self.tokens['access_token'] != new_tokens['access_token']:
             self.tokens['access_token'] = new_tokens['access_token']
@@ -202,9 +206,9 @@ class OneDrive:
 
     def __perform_login(self):
         """
-        If we can get tokens from a file, we do that. If we can't, we check if we already have tokens. If we don't, we
-        create an authorization URL and ask the user to go to it. Once they've done that, we ask them to paste the URL they
-        were redirected to, and we use that to get tokens
+        If we can get tokens from a file, we do that. If we can't, we check if we already have tokens. If we don't,
+        we create an authorization URL and ask the user to go to it. Once they've done that, we ask them to paste the
+        URL they were redirected to, and we use that to get tokens
         """
         if self.__get_tokens_from_file():
             logger.info("Successfully gathered tokens from file!")
@@ -213,7 +217,7 @@ class OneDrive:
         else:
             logger.info("Please go to this URL: " +
                         self.create_authorization_url())
-            logger.info("Insert URL where you been redirected:")
+            logger.info("Insert URL where have been redirected:")
             redirection_url = input()
             self.get_tokens(redirection_url=redirection_url)
 

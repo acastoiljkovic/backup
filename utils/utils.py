@@ -185,45 +185,45 @@ def schedule_job(func_name, seconds, minutes, hours, days, args):
         if hours == '00':
             if minutes == '00':
                 if seconds == '00':
-                    schedule.every().second.do(func_name,args)
+                    schedule.every().second.do(func_name, args)
                 else:
-                    schedule.every(int(seconds)).seconds.do(func_name,args)
+                    schedule.every(int(seconds)).seconds.do(func_name, args)
             else:
                 if seconds == '00':
-                    schedule.every(int(minutes)).minutes.do(func_name,args)
+                    schedule.every(int(minutes)).minutes.do(func_name, args)
                 else:
-                    schedule.every(int(minutes)).minutes.at(':' + seconds).do(func_name,args)
+                    schedule.every(int(minutes)).minutes.at(':' + seconds).do(func_name, args)
         else:
             if minutes == '00':
                 if seconds == '00':
-                    schedule.every(int(hours)).hours.do(func_name,args)
+                    schedule.every(int(hours)).hours.do(func_name, args)
                 else:
-                    schedule.every(int(hours)).hours.at(':' + seconds).do(func_name,args)
+                    schedule.every(int(hours)).hours.at(':' + seconds).do(func_name, args)
             else:
                 if seconds == '00':
-                    schedule.every(int(hours)).hours.at(minutes + ':00').do(func_name,args)
+                    schedule.every(int(hours)).hours.at(minutes + ':00').do(func_name, args)
                 else:
-                    schedule.every(int(hours)).hours.at(minutes + ':' + seconds).do(func_name,args)
+                    schedule.every(int(hours)).hours.at(minutes + ':' + seconds).do(func_name, args)
     else:
         if hours == '00':
             if minutes == '00':
                 if seconds == '00':
-                    schedule.every(int(days)).days.do(func_name,args)
+                    schedule.every(int(days)).days.do(func_name, args)
                 else:
-                    schedule.every(int(days)).days.at('00:00:' + seconds).do(func_name,args)
+                    schedule.every(int(days)).days.at('00:00:' + seconds).do(func_name, args)
             else:
                 if seconds == '00':
-                    schedule.every(int(days)).days.at('00:' + minutes + ':00').do(func_name,args)
+                    schedule.every(int(days)).days.at('00:' + minutes + ':00').do(func_name, args)
                 else:
-                    schedule.every(int(days)).days.at('00:' + minutes + ':' + seconds).do(func_name,args)
+                    schedule.every(int(days)).days.at('00:' + minutes + ':' + seconds).do(func_name, args)
         else:
             if minutes == '00':
                 if seconds == '00':
-                    schedule.every(int(days)).days.at(hours + ':00:00').do(func_name,args)
+                    schedule.every(int(days)).days.at(hours + ':00:00').do(func_name, args)
                 else:
-                    schedule.every(int(days)).days.at(hours + ':00:' + seconds).do(func_name,args)
+                    schedule.every(int(days)).days.at(hours + ':00:' + seconds).do(func_name, args)
             else:
                 if seconds == '00':
-                    schedule.every(int(days)).days.at(hours + ':' + minutes + ':00').do(func_name,args)
+                    schedule.every(int(days)).days.at(hours + ':' + minutes + ':00').do(func_name, args)
                 else:
-                    schedule.every(int(days)).days.at(hours + ':' + minutes + ':' + seconds).do(func_name,args)
+                    schedule.every(int(days)).days.at(hours + ':' + minutes + ':' + seconds).do(func_name, args)

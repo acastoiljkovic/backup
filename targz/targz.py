@@ -24,10 +24,6 @@ def targz(paths, destinations, encrypt, enc_pass, no_copies=3, one_drive=None, o
     :param one_drive_dir: The directory on OneDrive where you want to store the backup
     :return: Nothing is being returned.
     """
-    if ';' in paths:
-        paths = paths.split(';')
-    if ';' in destinations:
-        destinations = destinations.split(';')
 
     for dir2compress in paths:
         logger.info("---------------------------------------")
@@ -102,10 +98,6 @@ def targz_incremental(paths, destinations, encrypt, enc_pass, one_drive=None, on
     :param one_drive_dir: The directory on OneDrive where you want to store the backup
     :return: Nothing is being returned.
     """
-    if ';' in paths:
-        paths = paths.split(';')
-    if ';' in destinations:
-        destinations = destinations.split(';')
 
     for dir2compress in paths:
         logger.info("---------------------------------------")
@@ -170,8 +162,8 @@ def targz_incremental(paths, destinations, encrypt, enc_pass, one_drive=None, on
 
 def targz_differential(paths, destinations, encrypt, enc_pass, one_drive=None, one_drive_dir=None):
     """
-    It creates a tar.gz file of the provided directory, and then compares it to the previous tar.gz file, and only keeps the
-    new files
+    It creates a tar.gz file of the provided directory, and then compares it to the previous tar.gz file,
+    and only keeps the new files
 
     :param paths: a list of paths to compress
     :param destinations: a list of directories where the backup will be stored
@@ -181,10 +173,6 @@ def targz_differential(paths, destinations, encrypt, enc_pass, one_drive=None, o
     :param one_drive_dir: The directory on OneDrive where you want to store the backup
     :return: Nothing is being returned.
     """
-    if ';' in paths:
-        paths = paths.split(';')
-    if ';' in destinations:
-        destinations = destinations.split(';')
 
     for dir2compress in paths:
         logger.info("---------------------------------------")
@@ -279,10 +267,6 @@ def targz_remote(host, paths, destinations, encrypt, enc_pass, no_copies=3, one_
     :param one_drive_dir: The directory in OneDrive where you want to store the backup
     :return: Nothing is being returned.
     """
-    if ';' in paths:
-        paths = paths.split(';')
-    if ';' in destinations:
-        destinations = destinations.split(';')
 
     for path in paths:
         logger.info("---------------------------------------")
@@ -371,10 +355,6 @@ def targz_incremental_remote(host, paths, destinations, encrypt, enc_pass, one_d
     :param one_drive_dir: The directory in OneDrive where you want to store the backup files
     :return: The return value is a tuple (status, output)
     """
-    if ';' in paths:
-        paths = paths.split(';')
-    if ';' in destinations:
-        destinations = destinations.split(';')
 
     for path in paths:
         logger.info("---------------------------------------")
@@ -450,10 +430,6 @@ def targz_differential_remote(host, paths, destinations, encrypt, enc_pass, one_
     :param one_drive_dir: The directory on OneDrive where you want to store the backup files
     :return: The return value is a tuple (status, output)
     """
-    if ';' in paths:
-        paths = paths.split(';')
-    if ';' in destinations:
-        destinations = destinations.split(';')
 
     for path in paths:
         logger.info("---------------------------------------")

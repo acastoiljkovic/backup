@@ -79,10 +79,11 @@ def mysqldump(database, user, password, dest, encrypt="False", enc_password=None
 def mysqldump_remote(host, database, user, password, destination, encrypt, enc_pass, no_copies,
                      one_drive=None, one_drive_dir=None):
     """
-    It takes a database name, a hostname, a username, a password, a destination directory, a boolean value for encryption,
-    an encryption password, a number of copies to keep, and an optional OneDrive object and OneDrive directory, and it dumps
-    the database to a file in the destination directory, encrypts it if encryption is enabled, removes old copies of the
-    database dump, and uploads the file to OneDrive if the OneDrive object is provided
+    It takes a database name, a hostname, a username, a password, a destination directory, a boolean value for
+    encryption, an encryption password, a number of copies to keep, and an optional OneDrive object and OneDrive
+    directory, and it dumps the database to a file in the destination directory, encrypts it if encryption is
+    enabled, removes old copies of the database dump, and uploads the file to OneDrive if the OneDrive object is
+    provided
 
     :param host: The hostname or IP address of the remote server
     :param database: The name of the database to backup

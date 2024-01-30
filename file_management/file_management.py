@@ -239,7 +239,8 @@ def rmold_remote(host, dir, name, no_copies, encrypt):
     :param dir: The directory where the files are located
     :param name: The name of the file to be backed up
     :param no_copies: The number of copies to keep
-    :param encrypt: This is a boolean value that tells the script whether or not to encrypt the backup
+    :param encrypt: This is a boolean value that tells the script
+                    whether to encrypt the backup
     """
 
     logger.info("---------------------------------------")
@@ -280,7 +281,8 @@ def keep_only_oldest_and_newest(dir, name, encrypt):
 
     :param dir: The directory where the files are located
     :param name: The name of the file to be deleted
-    :param encrypt: This is a boolean value that tells the script whether or not to encrypt the file
+    :param encrypt: This is a boolean value that tells the script
+                    whether to encrypt the file
     """
 
     logger.info("---------------------------------------")

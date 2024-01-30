@@ -3,8 +3,8 @@ import sys
 from backup import backup
 
 
-def catch_hup(signalNumber, frame):
-    if signalNumber == signal.SIGHUP:
+def catch_hup(signal_umber, frame):
+    if signal_umber == signal.SIGHUP:
         backup.reload()
 
 

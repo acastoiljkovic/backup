@@ -270,6 +270,10 @@ def schedule_modules(conf):
     from utils import utils
     import time
     for dirs in conf.dirs_config:
+        if type(dirs.path) is str:
+            dirs.path = dirs.path.split(';')
+        if type(dirs.destination) is str:
+            dirs.destination = dirs.destination.split(';')
         seconds, minutes, hours, days = utils.parse_time(dirs.exec_time)
         utils.schedule_job(func_name=targz_module,
                            seconds=seconds,
