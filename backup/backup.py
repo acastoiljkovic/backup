@@ -268,7 +268,6 @@ def run_modules(conf):
 
 def schedule_modules(conf):
     from utils import utils
-    import time
     for dirs in conf.dirs_config:
         if type(dirs.path) is str:
             dirs.path = dirs.path.split(';')
@@ -309,11 +308,6 @@ def schedule_modules(conf):
                            days=days,
                            args=mysql_conf)
 
-    schedule.run_all()
-    while True:
-        schedule.run_pending()
-        time.sleep(10)
-
 
 def run(path):
     global onedrive
@@ -326,6 +320,7 @@ def run(path):
     global include
 
     config_data, no_copies, log_level, log_path, exec_time, include, onedrive = config.load_configuration(path)
+    scheduled_exists = 0
     for conf in config_data:
         if onedrive is not None:
             onedrive = one_drive.OneDrive(
@@ -340,6 +335,17 @@ def run(path):
             run_modules(conf)
         else:
             schedule_modules(conf)
+            scheduled_exists = 1
+    if scheduled_exists == 1:
+        run_scheduled()
+
+
+def run_scheduled():
+    import time
+    schedule.run_all()
+    while True:
+        schedule.run_pending()
+        time.sleep(10)
 
 
 def reload():

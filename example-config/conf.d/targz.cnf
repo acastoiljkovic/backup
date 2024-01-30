@@ -45,7 +45,7 @@ exec_time       = * * * *
 #       perform backup a new file will be generated. System will log error and proceed to work.
 
 [dirs2backup_remote]
-### List of hosts on which targz will be executed
+### Host on which targz will be executed
 host       = 192.168.0.15
 
 ### Array of directories to do backup

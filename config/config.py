@@ -589,7 +589,7 @@ def load_configuration(path='/etc/backup/backup.cnf'):
             'onedrive', 'tokens_file', fallback='/etc/backup/tokens.json')
 
     formatted = """
-        [genera]
+        [general]
         no_copies   = {0}
         log_level   = {1}
         log_path    = {2}
