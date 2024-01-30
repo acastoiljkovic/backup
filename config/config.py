@@ -372,7 +372,7 @@ onedrive=None
         [dirs2backup_remote]
         no_copies           = {0}
         host                = {1}
-        host                = {2}
+        path                = {2}
         destination         = {3}
         encrypt             = {4}
         enc_pass            = ***************

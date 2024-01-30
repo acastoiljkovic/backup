@@ -13,7 +13,7 @@ exec_time       = * * * *
 ### NOTE ###
 # In order to execute remote backup, system assume that
 # ssh keys are exchanged with server for root user
-# permissions. Commands that can achieve above are provided below:
+# permissions. Commands that can achieve that are provided below:
 # if you don't have ssh key, it can be generated using next command
 # ssh-keygen
 # to exchange keys with the server use next command :
