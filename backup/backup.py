@@ -13,6 +13,7 @@ exec_time = None
 one_drive_general = None
 include = None
 no_copies = 3
+config_file_path = '/etc/backup/backup.cnf'
 
 
 def mysql_module(mysql_conf):
@@ -318,6 +319,8 @@ def run(path):
     global exec_time
     global one_drive_general
     global include
+    global config_file_path
+    config_file_path = path
 
     config_data, no_copies, log_level, log_path, exec_time, include, onedrive = config.load_configuration(path)
     scheduled_exists = 0
@@ -360,8 +363,11 @@ def reload():
     global onedrive
     global one_drive_general
     global include
+    global config_file_path
 
-    config_data = config.get_conf_data(include, no_copies, log_level, log_path, exec_time, one_drive_general)
+    # config_data = config.get_conf_data(include, no_copies, log_level, log_path, exec_time, one_drive_general)
+    config_data, no_copies, log_level, log_path, exec_time, include, onedrive =\
+        config.load_configuration(config_file_path)
     scheduled_exists = 0
     for conf in config_data:
         if onedrive is not None:
@@ -380,7 +386,7 @@ def reload():
             scheduled_exists = 1
     if scheduled_exists == 1:
         run_scheduled()
-        
+
     # init_one_drive()
     # if conf_data.exec_time is None:
     #     run_elastic()
