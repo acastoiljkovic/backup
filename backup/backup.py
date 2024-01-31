@@ -311,36 +311,10 @@ def schedule_modules(conf):
 
 
 def run(path):
-    global onedrive
-    global config_data
-    global log_level
-    global no_copies
-    global log_path
-    global exec_time
-    global one_drive_general
-    global include
     global config_file_path
     config_file_path = path
 
-    config_data, no_copies, log_level, log_path, exec_time, include, onedrive = config.load_configuration(path)
-    scheduled_exists = 0
-    for conf in config_data:
-        if onedrive is not None:
-            onedrive = one_drive.OneDrive(
-                client_secret=conf.onedrive_config.client_secret,
-                client_id=conf.onedrive_config.client_id,
-                scopes=conf.onedrive_config.scopes,
-                tokens_file=conf.onedrive_config.tokens_file,
-                tenant_id=conf.onedrive_config.tenant_id,
-            )
-            onedrive.check_tokens()
-        if conf.exec_time is None:
-            run_modules(conf)
-        else:
-            schedule_modules(conf)
-            scheduled_exists = 1
-    if scheduled_exists == 1:
-        run_scheduled()
+    run_or_schedule_based_on_config(config_file_path)
 
 
 def run_scheduled():
@@ -366,8 +340,31 @@ def reload():
     global config_file_path
 
     # config_data = config.get_conf_data(include, no_copies, log_level, log_path, exec_time, one_drive_general)
-    config_data, no_copies, log_level, log_path, exec_time, include, onedrive =\
-        config.load_configuration(config_file_path)
+    run_or_schedule_based_on_config(config_file_path)
+    # init_one_drive()
+    # if conf_data.exec_time is None:
+    #     run_elastic()
+    #     run_mysqldump()
+    #     run_targz()
+    #     run_sync()
+    #     run_mysqldump_remote()
+    #     run_targz_remote()
+    #     run_sync_remote()
+    # else:
+    #
+
+
+def run_or_schedule_based_on_config(path):
+    global config_data
+    global log_level
+    global no_copies
+    global log_path
+    global exec_time
+    global onedrive
+    global one_drive_general
+    global include
+
+    config_data, no_copies, log_level, log_path, exec_time, include, onedrive = config.load_configuration(path)
     scheduled_exists = 0
     for conf in config_data:
         if onedrive is not None:
@@ -386,15 +383,3 @@ def reload():
             scheduled_exists = 1
     if scheduled_exists == 1:
         run_scheduled()
-
-    # init_one_drive()
-    # if conf_data.exec_time is None:
-    #     run_elastic()
-    #     run_mysqldump()
-    #     run_targz()
-    #     run_sync()
-    #     run_mysqldump_remote()
-    #     run_targz_remote()
-    #     run_sync_remote()
-    # else:
-    #
