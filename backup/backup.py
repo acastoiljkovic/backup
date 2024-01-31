@@ -362,6 +362,7 @@ def reload():
     global include
 
     config_data = config.get_conf_data(include, no_copies, log_level, log_path, exec_time, one_drive_general)
+    scheduled_exists = 0
     for conf in config_data:
         if onedrive is not None:
             onedrive = one_drive.OneDrive(
@@ -376,7 +377,10 @@ def reload():
             run_modules(conf)
         else:
             schedule_modules(conf)
-
+            scheduled_exists = 1
+    if scheduled_exists == 1:
+        run_scheduled()
+        
     # init_one_drive()
     # if conf_data.exec_time is None:
     #     run_elastic()
