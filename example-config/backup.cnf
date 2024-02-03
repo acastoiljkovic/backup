@@ -12,7 +12,7 @@ log_path    = /var/log/backup
 ### Pattern that will be used in order to find other configuration files
 include     = /etc/backup/conf.d/*.cnf
 
-### If you dont specify exec_time system will perform only one full cycle,
+### If you don't specify exec_time system will perform only one full cycle,
 ### do a backup of everything specified in config and close.
 ### If you want to schedule execution of jobs you have to specify this parameter.
 ### Inside any section you can override this parameter

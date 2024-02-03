@@ -237,7 +237,7 @@ class OneDrive:
             self.check_tokens()
             try:
                 upload_url = self.__get_upload_url(
-                    dir=one_drive_dir, file_name=file_name)
+                    one_drive_dir=one_drive_dir, file_name=file_name)
                 logger.debug("Upload URL: " + str(upload_url))
                 self.__upload_to_one_drive(
                     url=upload_url,
@@ -248,16 +248,16 @@ class OneDrive:
                 logger.error(
                     "Error while performing upload to OneDrive: " + str(e))
 
-    def __get_upload_url(self, dir, file_name):
+    def __get_upload_url(self, one_drive_dir, file_name):
         """
         It gets the upload URL for a file
 
-        :param dir: The directory where the file will be uploaded
+        :param one_drive_dir: The directory where the file will be uploaded
         :param file_name: The name of the file to be uploaded
         :return: The response object is being returned.
         """
 
-        response = self.__get_upload_url_request(dir=dir, file_name=file_name)
+        response = self.__get_upload_url_request(one_drive_dir=one_drive_dir, file_name=file_name)
 
         if 200 <= response.status_code < 300:
             logger.debug(response.json())
@@ -265,16 +265,16 @@ class OneDrive:
         elif response.status_code == 401:
             logger.warning("Access token is expired, renewing it! ")
             self.renew_tokens()
-            return self.__get_upload_url_request(dir, file_name).json()['uploadUrl']
+            return self.__get_upload_url_request(one_drive_dir, file_name).json()['uploadUrl']
         else:
             logger.error("Error while generating upload URL!")
             return None
 
-    def __get_upload_url_request(self, dir, file_name):
+    def __get_upload_url_request(self, one_drive_dir, file_name):
         """
         It gets the upload URL for a file
 
-        :param dir: The directory where the file will be uploaded
+        :param one_drive_dir: The directory where the file will be uploaded
         :param file_name: The name of the file to be uploaded
         :return: The response object is being returned.
         """
@@ -289,7 +289,7 @@ class OneDrive:
         }
 
         get_upload_session_url = self.__GRAPH_API_URL + f'/me/drive/items/root:/' + \
-                                 dir + '/' + file_name + ':/createUploadSession'
+                                 one_drive_dir + '/' + file_name + ':/createUploadSession'
         logger.debug("URL for getting upload session: " + get_upload_session_url)
         response = None
         try:
@@ -304,7 +304,7 @@ class OneDrive:
             elif response.status_code == 401:
                 logger.warning("Access token is expired, renewing it! ")
                 self.renew_tokens()
-                return self.__get_upload_url_request(dir, file_name).json()['uploadUrl']
+                return self.__get_upload_url_request(one_drive_dir, file_name).json()['uploadUrl']
             else:
                 logger.error("Error while generating upload URL!")
                 return None
@@ -368,7 +368,7 @@ class OneDrive:
                         str(timedelta(seconds=end - start)))
         else:
             logger.warning("Session is terminated with status code: " +
-                           str(response.status_code) + "\nand content: " + response.content)
+                           str(response.status_code) + "\nand content: " + str(response.content))
 
     def remove_old_files(self, file_name, one_drive_dir, encrypt, no_copies=3):
         """

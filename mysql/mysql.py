@@ -14,7 +14,7 @@ def mysqldump(database, user, password, dest, encrypt="False", enc_password=None
     OneDrive object and directory, and then dumps the database to a file in the destination directory, encrypts it if
     encryption is enabled, and uploads it to OneDrive if OneDrive is enabled
 
-    :param database: The name of the database you want to backup
+    :param database: The name of the database you want to back up
     :param user: The user to connect to the database with
     :param password: The password for the user you're using to connect to the database
     :param dest: The directory where the backup will be stored
@@ -60,7 +60,7 @@ def mysqldump(database, user, password, dest, encrypt="False", enc_password=None
                 file_name = file_name + '.enc'
 
             file_management.rmold(
-                dir=dest,
+                directory=dest,
                 name='mysqldump_' + database,
                 no_copies=no_copies,
                 encrypt=encrypt
@@ -86,7 +86,7 @@ def mysqldump_remote(host, database, user, password, destination, encrypt, enc_p
     provided
 
     :param host: The hostname or IP address of the remote server
-    :param database: The name of the database to backup
+    :param database: The name of the database to back up
     :param user: The user to connect to the database with
     :param password: The password for the user
     :param destination: The directory where the backup will be stored
@@ -134,7 +134,7 @@ def mysqldump_remote(host, database, user, password, destination, encrypt, enc_p
 
             file_management.rmold_remote(
                 host=host,
-                dir=destination,
+                directory=destination,
                 name='mysqldump_' + database,
                 no_copies=no_copies,
                 encrypt=encrypt

@@ -329,14 +329,6 @@ def reload():
     logger.info("Reloading configuration !")
     for job in schedule.get_jobs():
         schedule.cancel_job(job)
-    global config_data
-    global log_level
-    global no_copies
-    global log_path
-    global exec_time
-    global onedrive
-    global one_drive_general
-    global include
     global config_file_path
 
     # config_data = config.get_conf_data(include, no_copies, log_level, log_path, exec_time, one_drive_general)

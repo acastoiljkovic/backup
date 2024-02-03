@@ -1,7 +1,7 @@
 
 ### Section for compressing dirs ###
 [dirs2backup]
-### Array of directories that will be backuped
+### Array of directories to back up
 path		= /data/es/;/data/mysqldump/
 
 ### Array of destinations where to store backups

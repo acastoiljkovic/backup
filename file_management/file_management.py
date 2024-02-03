@@ -190,11 +190,11 @@ def sync_remote(host, source, destination):
                     str(timedelta(seconds=end - start)))
 
 
-def rmold(dir, name, no_copies, encrypt):
+def rmold(directory, name, no_copies, encrypt):
     """
     It deletes all but the most recent N files in a directory
 
-    :param dir: The directory where the files are located
+    :param directory: The directory where the files are located
     :param name: The name of the file to be backed up
     :param no_copies: The number of copies to keep
     :param encrypt: True/False
@@ -203,12 +203,12 @@ def rmold(dir, name, no_copies, encrypt):
     logger.info("---------------------------------------")
     logger.info("start delete")
     logger.info("---------------------------------------")
-    logger.info("Deleting files from directory: " + str(dir))
+    logger.info("Deleting files from directory: " + str(directory))
     logger.debug("Number of files to save: " + str(no_copies))
     if encrypt.upper() == "FALSE":
-        list_cmd = 'ls -t ' + dir + ' | grep \'' + name + '\' | grep -v \'.enc$\''
+        list_cmd = 'ls -t ' + directory + ' | grep \'' + name + '\' | grep -v \'.enc$\''
     else:
-        list_cmd = 'ls -t ' + dir + ' | grep -E \'' + name + '.*.enc*\''
+        list_cmd = 'ls -t ' + directory + ' | grep -E \'' + name + '.*.enc*\''
     code, out, err = utils.run(list_cmd)
     if code == 0:
         line = out.split('\n')
@@ -216,7 +216,7 @@ def rmold(dir, name, no_copies, encrypt):
         logger.debug("Number of files for deletion: " +
                      str(len(line) - int(no_copies) - 1))
         for i in range(int(no_copies), len(line) - 1):
-            f = dir + '/' + line[i].split(' ')[0]
+            f = directory + '/' + line[i].split(' ')[0]
             rm_cmd = 'rm ' + f
             code, out, err = utils.run(rm_cmd)
             if code > 0:
@@ -225,18 +225,18 @@ def rmold(dir, name, no_copies, encrypt):
             else:
                 logger.debug("File " + f + " successfully deleted")
 
-        logger.info("Finished deleting files from directory: " + dir)
+        logger.info("Finished deleting files from directory: " + directory)
     else:
         logger.error("Error while listing files with error: " + err +
                      " out: " + out + " code: " + str(code))
 
 
-def rmold_remote(host, dir, name, no_copies, encrypt):
+def rmold_remote(host, directory, name, no_copies, encrypt):
     """
     It deletes old files from a remote host
 
     :param host: The hostname or IP address of the remote host
-    :param dir: The directory where the files are located
+    :param directory: The directory where the files are located
     :param name: The name of the file to be backed up
     :param no_copies: The number of copies to keep
     :param encrypt: This is a boolean value that tells the script
@@ -247,12 +247,12 @@ def rmold_remote(host, dir, name, no_copies, encrypt):
     logger.info("start delete remotely")
     logger.info("---------------------------------------")
     logger.info("Deleting files on host: " + host)
-    logger.info("Deleting files from directory: " + str(dir))
+    logger.info("Deleting files from directory: " + str(directory))
     logger.debug("Number of files to save: " + str(no_copies))
     if encrypt.upper() == "FALSE":
-        list_cmd = 'ls -t ' + dir + ' | grep \'' + name + '\' | grep -v \'.enc$\''
+        list_cmd = 'ls -t ' + directory + ' | grep \'' + name + '\' | grep -v \'.enc$\''
     else:
-        list_cmd = 'ls -t ' + dir + ' | grep -E \'' + name + '.*.enc*\''
+        list_cmd = 'ls -t ' + directory + ' | grep -E \'' + name + '.*.enc*\''
     code, out, err = utils.run_remote(list_cmd, host)
     if code == 0:
         line = out.split('\n')
@@ -260,7 +260,7 @@ def rmold_remote(host, dir, name, no_copies, encrypt):
         logger.debug("Number of files for deletion: " +
                      str(len(line) - int(no_copies) - 1))
         for i in range(int(no_copies), len(line) - 1):
-            f = dir + '/' + line[i].split(' ')[0]
+            f = directory + '/' + line[i].split(' ')[0]
             rm_cmd = 'rm ' + f
             code, out, err = utils.run_remote(rm_cmd, host)
             if code > 0:
@@ -269,17 +269,17 @@ def rmold_remote(host, dir, name, no_copies, encrypt):
             else:
                 logger.debug("File " + f + " successfully deleted")
 
-        logger.info("Finished deleting files from directory: " + dir)
+        logger.info("Finished deleting files from directory: " + directory)
     else:
         logger.error("Error while listing files with error: " + err +
                      " out: " + out + " code: " + str(code))
 
 
-def keep_only_oldest_and_newest(dir, name, encrypt):
+def keep_only_oldest_and_newest(directory, name, encrypt):
     """
     It deletes all but the newest and oldest files in a directory
 
-    :param dir: The directory where the files are located
+    :param directory: The directory where the files are located
     :param name: The name of the file to be deleted
     :param encrypt: This is a boolean value that tells the script
                     whether to encrypt the file
@@ -288,18 +288,18 @@ def keep_only_oldest_and_newest(dir, name, encrypt):
     logger.info("---------------------------------------")
     logger.info("start delete")
     logger.info("---------------------------------------")
-    logger.info("Deleting files from directory: " + dir)
+    logger.info("Deleting files from directory: " + directory)
     if encrypt.upper() == "FALSE":
-        list_cmd = 'ls -t ' + dir + ' | grep \'' + name + \
+        list_cmd = 'ls -t ' + directory + ' | grep \'' + name + \
                    '\' | grep -v \'.enc$\' | grep -v \'.snap$\' | grep -v \'.snap.bak$\''
     else:
-        list_cmd = 'ls -t ' + dir + ' | grep -E \'' + name + '.*.enc*\''
+        list_cmd = 'ls -t ' + directory + ' | grep -E \'' + name + '.*.enc*\''
     code, out, err = utils.run(list_cmd)
     if code == 0:
         line = out.split('\n')
         logger.debug("Number of files: " + str(len(line) - 1))
         for i in range(1, len(line) - 2):
-            f = dir + '/' + line[i].split(' ')[0]
+            f = directory + '/' + line[i].split(' ')[0]
             rm_cmd = 'rm ' + f
             code, out, err = utils.run(rm_cmd)
             if code > 0:

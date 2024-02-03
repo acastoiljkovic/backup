@@ -185,7 +185,7 @@ def find_newest_snapshot(es_url, repo, index, auth):
 
     :param es_url: The URL of the Elasticsearch cluster
     :param repo: The name of the repository you want to use
-    :param index: The name of the index you want to backup
+    :param index: The name of the index you want to back up
     :param auth: This is the authentication information for the Elasticsearch cluster
     :return: The name of the snapshot.
     """

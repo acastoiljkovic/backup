@@ -33,7 +33,7 @@ class ConfigurationData:
         :param log_level: The level of logging, defaults to INFO (optional)
         :param exec_time: The time when the backup should be executed, defaults to * * * * (optional)
         :param mysql_config: a list of dictionaries, each dictionary containing the following keys:
-        :param elastic_config: A list of Elasticsearch instances to backup
+        :param elastic_config: A list of Elasticsearch instances to back up
         :param dirs_config: a list of dictionaries, each dictionary contains the following keys:
         :param rsync_config: This is a list of dictionaries. Each dictionary contains the following keys:
         :param onedrive_config: This is the configuration for the onedrive client

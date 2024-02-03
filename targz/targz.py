@@ -83,7 +83,7 @@ def targz(paths, destinations, encrypt, enc_pass, no_copies=3, one_drive=None, o
                 if i != 0:
                     file_management.copy(file_name, destinations[i], fn)
                 file_management.rmold(
-                    dir=destinations[i], name=file_prefix, encrypt=encrypt, no_copies=no_copies)
+                    directory=destinations[i], name=file_prefix, encrypt=encrypt, no_copies=no_copies)
 
 
 def targz_incremental(paths, destinations, encrypt, enc_pass, one_drive=None, one_drive_dir=None):
@@ -249,7 +249,7 @@ def targz_differential(paths, destinations, encrypt, enc_pass, one_drive=None, o
                     file_management.copy(
                         snap_file_bak, destinations[i], file_prefix + '.snap.bak')
                 file_management.keep_only_oldest_and_newest(
-                    dir=destinations[i], name=file_prefix, encrypt=encrypt)
+                    directory=destinations[i], name=file_prefix, encrypt=encrypt)
 
 
 def targz_remote(host, paths, destinations, encrypt, enc_pass, no_copies=3, one_drive=None, one_drive_dir=None):
@@ -329,7 +329,7 @@ def targz_remote(host, paths, destinations, encrypt, enc_pass, no_copies=3, one_
                 no_copies=no_copies)
 
             file_management.rmold(
-                dir=destinations[0],
+                directory=destinations[0],
                 name=file_prefix,
                 encrypt=encrypt,
                 no_copies=no_copies)
@@ -339,7 +339,7 @@ def targz_remote(host, paths, destinations, encrypt, enc_pass, no_copies=3, one_
                 if i != 0:
                     file_management.copy(file_name, destinations[i], fn)
                 file_management.rmold(
-                    dir=destinations[i], name=file_prefix, encrypt=encrypt, no_copies=no_copies)
+                    directory=destinations[i], name=file_prefix, encrypt=encrypt, no_copies=no_copies)
 
 
 def targz_incremental_remote(host, paths, destinations, encrypt, enc_pass, one_drive=None, one_drive_dir=None):
@@ -506,4 +506,4 @@ def targz_differential_remote(host, paths, destinations, encrypt, enc_pass, one_
                     file_management.copy(
                         snap_file_bak, destinations[i], file_prefix + '.snap.bak')
                 file_management.keep_only_oldest_and_newest(
-                    dir=destinations[i], name=file_prefix, encrypt=encrypt)
+                    directory=destinations[i], name=file_prefix, encrypt=encrypt)

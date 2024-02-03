@@ -157,8 +157,8 @@ def schedule_job(func_name, seconds, minutes, hours, days, args):
     If the value of the parameter is 0, then the function will run every time the unit of time is incremented
 
     :param func_name: The function to be scheduled
-    :param seconds: 0-59
-    :param minutes: 0-59
+    :param seconds: 0 - 59
+    :param minutes: 0 - 59
     :param hours: 0-23
     :param days: The number of days to wait
     :param args: The arguments to pass to the function
