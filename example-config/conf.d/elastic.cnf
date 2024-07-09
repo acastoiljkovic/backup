@@ -3,7 +3,7 @@
 # In order to perform
 [elasticsearch]
 ### URL to elasticsearch cluster
-es_url      = http://192.168.0.15:9200
+url      = http://192.168.0.15:9200
 
 ### Full backup or only specific index
 full        = True

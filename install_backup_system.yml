@@ -1,0 +1,56 @@
+---
+- name: Install backup system
+  hosts: backup
+  become: true
+  vars:
+    backup_service_file: /etc/systemd/system/backup.service
+
+  tasks:
+    - name: Copy current directory to remote server
+      ansible.posix.synchronize:
+        src: .
+        dest: /opt/backup
+        delete: true
+        recursive: true
+
+    - name: Install Python 3.9 (if not installed)
+      ansible.builtin.package:
+        name: python3.9
+        state: present
+
+    - name: Install pip
+      ansible.builtin.package:
+        name: python3-pip
+        state: present
+
+    - name: Install Python requirements
+      ansible.builtin.pip:
+        requirements: /opt/backup/requirements.txt
+        executable: /usr/bin/python3.9
+
+    - name: Ensure /etc/backup directory exists
+      ansible.builtin.file:
+        path: /etc/backup
+        state: directory
+        mode: '0755'
+
+    - name: Ensure /var/log/backup directory exists
+      ansible.builtin.file:
+        path: /var/log/backup
+        state: directory
+        mode: '0755'
+
+    - name: Create backup service file
+      ansible.builtin.template:
+        src: backup.service.j2
+        dest: "{{ backup_service_file }}"
+        mode: '0655'
+      notify:
+        - Reload systemd
+
+  handlers:
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true
+        state: restarted
+        name: backup.service

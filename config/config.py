@@ -547,7 +547,10 @@ def load_configuration(path='/etc/backup/backup.cnf'):
 
     :param path: The path to the configuration file, defaults to /etc/backup/backup.cnf (optional)
     """
-    print("\n" + utils.utils.get_curr_date_time_log_format() + "  INFO: Config file: " + path)
+    if logger is None:
+        print("\n" + utils.utils.get_curr_date_time_log_format() + "  INFO: Config file: " + path)
+    else:
+        logger.info(utils.utils.get_curr_date_time_log_format() + "  INFO: Config file: " + path)
     if not os.path.exists(path):
         print(
             utils.utils.get_curr_date_time_log_format() + "  ERROR: configuration file '" +
@@ -571,7 +574,8 @@ def load_configuration(path='/etc/backup/backup.cnf'):
     if include is not None:
         include.strip()
 
-    init_logger(log_level, log_path)
+    if logger is None:
+        init_logger(log_level, log_path)
 
     onedrive = None
 

@@ -1,0 +1,69 @@
+---
+- name: Configure NFS server and clients
+  hosts: nfs
+  become: true
+  tasks:
+    - name: Install NFS server packages
+      ansible.builtin.package:
+        name: nfs-utils
+        state: present
+
+    - name: Start and enable NFS server
+      ansible.builtin.service:
+        name: nfs-server
+        state: started
+        enabled: true
+      when: server
+
+    - name: Extract NFS export paths
+      ansible.builtin.set_fact:
+        nfs_exports: |
+          "{{ groups.nfs | selectattr('server', 'defined') |
+          map('extract', hostvars, ['path']) | list }}"
+
+    - name: Create directories for NFS exports
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ nfs_exports }}"
+      when: item is defined and server
+
+    - name: Add NFS exports to /etc/exports
+      ansible.builtin.lineinfile:
+        path: /etc/exports
+        line: "{{ item }} *(rw,sync,no_subtree_check,no_root_squash)"
+        state: present
+      loop: "{{ nfs_exports }}"
+      when: item is defined and server
+
+    - name: Restart NFS server
+      ansible.builtin.service:
+        name: nfs-server
+        state: restarted
+      when: server
+
+
+    - name: Extract NFS server hostname
+      ansible.builtin.set_fact:
+        nfs_server: |
+          "{{ hostvars[groups.nfs | selectattr('server', 'defined') |
+          selectattr('server', 'equalto', true) |
+          map('extract', hostvars, 'inventory_hostname') |
+          first] }}"
+
+    - name: Create directories for NFS mounts
+      ansible.builtin.file:
+        path: "{{ path }}"
+        state: directory
+        mode: '0755'
+      when: not server
+
+    - name: Mount NFS shares
+      ansible.posix.mount:
+        path: "{{ path }}"
+        src: "{{ nfs_server }}:{{ path }}"
+        fstype: nfs
+        state: mounted
+        opts: "rw,nfsvers=3"
+      when: not server

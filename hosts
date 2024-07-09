@@ -1,0 +1,26 @@
+[linux]
+es1.local
+es2.local
+es3.local
+ms1.local
+ms2.local
+dir1.local
+dir2.local
+backupserver.local
+
+[mysql]
+ms1.local
+ms2.local
+
+[nfs]
+es1.local path=/data/backup_es
+es2.local path=/data/backup_es
+es3.local path=/data/backup_es
+ms1.local path=/data/backup_ms
+ms2.local path=/data/backup_ms
+dir1.local path=/data/backup_dir
+dir2.local path=/data/backup_dir
+backupserver.local server=true path=[/data/backup_es,/data/backup_ms,/data/backup_dir]
+
+[backup]
+backupserver.local

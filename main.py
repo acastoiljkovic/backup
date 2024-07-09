@@ -1,6 +1,9 @@
 import signal
 import sys
 from backup import backup
+import logging
+
+logger = logging.getLogger("backup_logger")
 
 
 def catch_hup(signal_umber, frame):

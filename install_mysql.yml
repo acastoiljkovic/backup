@@ -1,0 +1,53 @@
+- name: Install MySQL
+  hosts: mysql
+  become: true
+  gather_facts: true
+  tasks:
+
+
+    - name: Install mariadb-server
+      ansible.builtin.yum:
+        name:
+          - mariadb-server
+
+
+    - name: Enable mariadb
+      ansible.builtin.systemd_service:
+        name: mariadb
+        state: started
+        enabled: true
+
+
+    - name: Change password
+      changed_when: false
+      ansible.builtin.command: |
+        mysqladmin -u root -ptest123 password "test123"
+
+
+    - name: Perform alternative for mysql_secure_installation
+      changed_when: false
+      ansible.builtin.command: |
+        mysql -u root -ptest123 -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'test123';
+        DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+        DELETE FROM mysql.user WHERE User='';
+        DELETE FROM mysql.db WHERE Db='test' OR Db='test\_%';
+        FLUSH PRIVILEGES;"
+
+
+    - name: Create database test1
+      changed_when: false
+      ansible.builtin.command: |
+        mysql -u root -ptest123 -e 'CREATE DATABASE IF NOT EXISTS test1;
+        CREATE TABLE test1.test1(id INT, name VARCHAR(50));
+        INSERT INTO test1.test1 VALUES(1, "test one");
+        INSERT INTO test1.test1 VALUES(2, "test two");
+        INSERT INTO test1.test1 VALUES(3, "test three");
+        COMMIT;'
+
+
+    - name: Create test user and grant privileges
+      changed_when: false
+      ansible.builtin.command: |
+        mysql -u root -p"test123" -e "CREATE USER 'test'@'localhost' IDENTIFIED BY 'test123';
+        GRANT ALL PRIVILEGES ON test1.* TO 'test'@'localhost' WITH GRANT OPTION;
+        FLUSH PRIVILEGES;"

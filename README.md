@@ -5,3 +5,66 @@ Backup system is capable of doing multiple things:
   - mysqldump
   - snapshotting ES
   - upload to onedrive
+
+### UseCase diagram of backup system:
+![UseCase](images/usecase.png)
+
+
+
+### Infrastructure of backup system that is explained in detail in section deploymen:
+![Infrastructure](images/infrastructure.png)
+
+
+### For provisioning infrastructure you can use Vagrant. 
+```
+# install Vagrant using Homebrew
+brew install vagrant qemu
+
+# install required Vagrant plugins
+vagrant plugin install vagrant-vbguest
+vagrant plugin install vagrant-qemu
+vagrant plugin install vagrant-libvirt
+
+# change directory so the Vagrantfile is at .
+vagrant up
+
+# after that you should see 8 virtual machines running
+```
+![Vagrant Status](images/vagrant_status.png)
+
+### Configure system
+```
+# using ansible playbook
+ansible-playbook configure_system.yml -i hosts -u vagrant
+```
+
+### Install MySQl
+```
+# using ansible playbook
+ansible-playbook install_mysql.yml -i hosts -u vagrant
+```
+
+### Install Elasticsearch
+```
+# installation guide
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/rpm.html
+
+# it is important to add path.repo to configuration
+path.repo: ["/data/bckup_es"]
+
+# direcotry /data/backup_es shoult be mounted as NFS to the all nodes
+# NFS server shoud be backup server
+```
+
+### Configure NFS
+```
+# using ansible playbook
+ansible-playbook configure_nfs.yml -i hosts -u vagrant
+```
+
+### Prepare backup server
+```
+# using ansible playbook
+ansible-playbook install_backupp_system.yml -i hosts -u vagrant
+```
+
