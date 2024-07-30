@@ -7,57 +7,9 @@
       ansible.builtin.yum:
         name:
           - bash-completion
-          - git
-          - wget
-          - unzip
-          - nano
           - htop
-          - iftop
-          - iotop
-          - tcpdump
-          - lsof
-          - nmap
-          - iperf3
-          - iptraf-ng
-          - atop
-          - nmon
-          - bind-utils
-          - nmap-ncat
-          - pciutils
-          - tree
-          - tmux
-          - rsync
-          - zlib-devel
-          - net-tools
-          - mc
-          - rlwrap
-          - telnet
-          - lshw
-          - perl-Env
-          - dstat
-          - sysstat
-          - strace
-          - parted
-          - dstat
-          - mutt
-          - hdparm
-          - mtr
-          - smartmontools
-          - whois
-          - arp-scan
-          - wget
           - vim
-          - mlocate
-          - nvme-cli
-          - ncdu
-          - fail2ban
-          - firewalld
-          - postfix
-          - chrony
-          - ncdu
-          - tuned
           - yum-utils
-          - lvm2
         state: latest
 
     - name: Disable SELinux
@@ -83,30 +35,6 @@
       ansible.builtin.systemd_service:
         name: systemd-journald
         state: restarted
-        enabled: true
-
-    - name: Configure SAR IP/TCP/UDP/error counter loging
-      ansible.builtin.lineinfile:
-        path: /etc/sysconfig/sysstat
-        regex: '^SADC_OPTIONS="-S DISK"$'
-        line: 'SADC_OPTIONS="-S ALL"'
-
-    - name: Enable and start sysstat.service
-      ansible.builtin.systemd_service:
-        name: sysstat
-        state: started
-        enabled: true
-
-    - name: Enable and start atop.service
-      ansible.builtin.systemd_service:
-        name: atop
-        state: started
-        enabled: true
-
-    - name: Enable Chrony
-      ansible.builtin.systemd_service:
-        name: chronyd
-        state: started
         enabled: true
 
     - name: Update yum
