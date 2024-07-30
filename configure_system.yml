@@ -12,12 +12,6 @@
           - yum-utils
         state: latest
 
-    - name: Disable SELinux
-      ansible.posix.selinux:
-        state: disabled
-      ignore_errors: true
-      register: selinux_result
-
     - name: Change SELinux in /etc/selinux/config to disabled
       ansible.builtin.lineinfile:
         path: /etc/selinux/config
