@@ -25,6 +25,10 @@
         name: python3-pip
         state: present
 
+    - name: Install Python packaging
+      ansible.builtin.pip:
+        name: packaging
+
     - name: Install Python requirements
       ansible.builtin.pip:
         requirements: /opt/backup/requirements.txt
