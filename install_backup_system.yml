@@ -12,6 +12,8 @@
         dest: /opt/backup
         delete: true
         recursive: true
+        rsync_opts:
+          - "--exclude-from=exclude.txt"
 
     - name: Install Python 3.9 (if not installed)
       ansible.builtin.package:

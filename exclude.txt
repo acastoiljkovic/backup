@@ -1,0 +1,1 @@
+.*/  # Excludes any directory whose name contains a dot
