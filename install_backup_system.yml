@@ -9,7 +9,7 @@
     - name: Copy current directory to remote server
       ansible.posix.synchronize:
         src: .
-        dest: /opt/backup
+        dest: /opt/
         delete: true
         recursive: true
         rsync_opts:
