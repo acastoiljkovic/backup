@@ -17,7 +17,6 @@
         path: /etc/selinux/config
         regex: 'SELINUX=enforcing'
         line: 'SELINUX=disabled'
-      when: selinux_result is failed
 
     - name: Create a directory /var/log/journal
       ansible.builtin.file:
