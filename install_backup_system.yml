@@ -32,7 +32,6 @@
     - name: Install Python requirements
       ansible.builtin.pip:
         requirements: /opt/backup/requirements.txt
-        executable: /usr/bin/python3.9
 
     - name: Ensure /etc/backup directory exists
       ansible.builtin.file:
