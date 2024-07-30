@@ -26,9 +26,9 @@ Vagrant.configure("2") do |config|
 
         machine.vm.box = "fedora/40-cloud-base"
         machine.vm.hostname = machine_name
-        machine.vm.provider "qemu" do |qemu|
-          qemu.memory = 2048
-          qemu.machine_virtual_size = "20GB"
+        machine.vm.provider "libvirt" do |libvirt|
+            libvirt.cpus = 2
+            libvirt.memory = 2048
         end
       end
     end
