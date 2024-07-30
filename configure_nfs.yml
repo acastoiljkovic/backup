@@ -3,6 +3,11 @@
   hosts: nfs
   become: true
   tasks:
+
+    - name: Set the server variable
+      set_fact:
+        is_server: "{{ hostvars[inventory_hostname]['server'] | default(false) }}"
+
     - name: Install NFS server packages
       ansible.builtin.package:
         name: nfs-utils
@@ -13,7 +18,7 @@
         name: nfs-server
         state: started
         enabled: true
-      when: server
+      when: is_server
 
     - name: Extract NFS export paths
       ansible.builtin.set_fact:
@@ -27,7 +32,7 @@
         state: directory
         mode: '0755'
       loop: "{{ nfs_exports }}"
-      when: item is defined and server
+      when: item is defined and is_server
 
     - name: Add NFS exports to /etc/exports
       ansible.builtin.lineinfile:
@@ -35,7 +40,7 @@
         line: "{{ item }} *(rw,sync,no_subtree_check,no_root_squash)"
         state: present
       loop: "{{ nfs_exports }}"
-      when: item is defined and server
+      when: item is defined and is_server
 
     - name: Restart NFS server
       ansible.builtin.service:
@@ -57,7 +62,7 @@
         path: "{{ path }}"
         state: directory
         mode: '0755'
-      when: not server
+      when: not is_server
 
     - name: Mount NFS shares
       ansible.posix.mount:
@@ -66,4 +71,4 @@
         fstype: nfs
         state: mounted
         opts: "rw,nfsvers=3"
-      when: not server
+      when: not is_server
