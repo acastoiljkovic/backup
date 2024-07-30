@@ -48,7 +48,6 @@
         state: restarted
       when: server
 
-
     - name: Extract NFS server hostname
       ansible.builtin.set_fact:
         nfs_server: |
@@ -59,15 +58,15 @@
 
     - name: Create directories for NFS mounts
       ansible.builtin.file:
-        path: "{{ path }}"
+        path: "{{ hostvars[inventory_hostname]['path'] }}"
         state: directory
         mode: '0755'
       when: not is_server
 
     - name: Mount NFS shares
       ansible.posix.mount:
-        path: "{{ path }}"
-        src: "{{ nfs_server }}:{{ path }}"
+        path: "{{ hostvars[inventory_hostname]['path'] }}"
+        src: "{{ nfs_server }}:{{ hostvars[inventory_hostname]['path'] }}"
         fstype: nfs
         state: mounted
         opts: "rw,nfsvers=3"
