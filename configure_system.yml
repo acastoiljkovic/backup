@@ -36,6 +36,11 @@
         name: '*'
         state: latest
 
+    - name: Copy hosts file
+      ansible.builtin.copy:
+        src: /etc/hosts
+        dst: /etc/hosts
+
     - name: Reboot the machine (Wait for 5 min)
       ansible.builtin.reboot:
         reboot_timeout: 300

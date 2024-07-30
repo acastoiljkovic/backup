@@ -20,11 +20,17 @@
         enabled: true
       when: is_server
 
+#    - name: Extract NFS export paths
+#      ansible.builtin.set_fact:
+#        nfs_exports: |
+#          "{{ groups['nfs'] | map('extract', hostvars) |
+#          selectattr('server', 'equalto', 'true') | map(attribute='path') |
+#          map('split', ',') | flatten | list }}"
+
     - name: Extract NFS export paths
       ansible.builtin.set_fact:
-        nfs_exports: |
-          "{{ groups.nfs | selectattr('server', 'defined') |
-          map('extract', hostvars, ['path']) | list }}"
+        nfs_exports: "{{ groups['nfs'] | map('extract', hostvars) | selectattr('server', 'equalto', 'true') | map(attribute='path') | map('split', ',') | flatten | list }}"
+
 
     - name: Create directories for NFS exports
       ansible.builtin.file:
@@ -33,6 +39,7 @@
         mode: '0755'
       loop: "{{ nfs_exports }}"
       when: item is defined and is_server
+
 
     - name: Add NFS exports to /etc/exports
       ansible.builtin.lineinfile:
@@ -50,11 +57,7 @@
 
     - name: Extract NFS server hostname
       ansible.builtin.set_fact:
-        nfs_server: |
-          "{{ hostvars[groups.nfs | selectattr('server', 'defined') |
-          selectattr('server', 'equalto', true) |
-          map('extract', hostvars, 'inventory_hostname') |
-          first] }}"
+        nfs_server: "{{ groups['nfs'] | map('extract', hostvars) | selectattr('server', 'equalto', 'true') | map(attribute='inventory_hostname') | first }}"
 
     - name: Create directories for NFS mounts
       ansible.builtin.file:

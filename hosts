@@ -13,14 +13,14 @@ ms1.local
 ms2.local
 
 [nfs]
-es1.local path=[/data/backup_es] server=false
-es2.local path=[/data/backup_es] server=false
-es3.local path=[/data/backup_es] server=false
-ms1.local path=[/data/backup_ms] server=false
-ms2.local path=[/data/backup_ms] server=false
-dir1.local path=[/data/backup_dir] server=false
-dir2.local path=[/data/backup_dir] server=false
-backupserver.local server=true path=[/data/backup_es,/data/backup_ms,/data/backup_dir]
+es1.local path=/data/backup_es server=false
+es2.local path=/data/backup_es server=false
+es3.local path=/data/backup_es server=false
+ms1.local path=/data/backup_ms server=false
+ms2.local path=/data/backup_ms server=false
+dir1.local path=/data/backup_dir server=false
+dir2.local path=/data/backup_dir server=false
+backupserver.local server=true path=/data/backup_es,/data/backup_ms,/data/backup_dir
 
 [backup]
 backupserver.local
