@@ -1,0 +1,50 @@
+---
+- name: Install and configure Elasticsearch on all nodes
+  hosts: es
+  become: yes
+  vars:
+    es_version: "7.17.23"
+
+  tasks:
+    - name: Install Java
+      dnf:
+        name: java-11-openjdk
+        state: present
+
+    - name: Download Elasticsearch RPM
+      get_url:
+        url: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{{ es_version }}-x86_64.rpm"
+        dest: /tmp/elasticsearch-{{ es_version }}.rpm
+
+    - name: Install Elasticsearch
+      dnf:
+        name: /tmp/elasticsearch-{{ es_version }}.rpm
+        state: present
+        disable_gpg_check: true
+
+    - name: Ensure Elasticsearch is started and enabled
+      service:
+        name: elasticsearch
+        state: started
+        enabled: yes
+
+    - name: Configure Elasticsearch
+      template:
+        src: elasticsearch.yml.j2
+        dest: /etc/elasticsearch/elasticsearch.yml
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Set up Elasticsearch passwords
+      ansible.builtin.command: /usr/share/elasticsearch/bin/elasticsearch-setup-passwords auto
+      register: es_password_setup
+
+    - name: Elasticsearch password
+      debug:
+        msg: "Password setup response: {{ es_password_setup }}"
+
+    - name: Restart Elasticsearch
+      ansible.builtin.service:
+        name: elasticsearch
+        state: restarted

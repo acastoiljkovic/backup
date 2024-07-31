@@ -22,5 +22,17 @@ dir1.local path=/data/backup_dir server=false
 dir2.local path=/data/backup_dir server=false
 backupserver.local server=true path=/data/backup_es,/data/backup_ms,/data/backup_dir
 
+[es]
+es1.local
+es2.local
+es3.local
+
+[es:vars]
+cluster_name=test
+
+
+
+
 [backup]
 backupserver.local
+
