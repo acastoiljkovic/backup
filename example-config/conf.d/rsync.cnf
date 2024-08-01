@@ -24,7 +24,7 @@ exec_time       = * * * *
 ### Execute rsync on remote hosts
 [sync_remote]
 ### List of hosts on which rsync will be executed
-host       = 192.168.0.15
+host       = dir1.local
 
 ### Source directory
 src			= /data

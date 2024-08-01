@@ -2,7 +2,7 @@
 ### Section for compressing dirs ###
 [dirs2backup]
 ### Array of directories to back up
-path		= /data/es/;/data/mysqldump/
+path		= /etc/ssh/;/etc/yum.repos.d/
 
 ### Array of destinations where to store backups
 destination	= /data/backup;/data/backup1
@@ -16,8 +16,10 @@ enc_pass	= 'encryptionpassword'
 ### Type of backup, supported types are full, differential, incremental
 backup_type = differential
 
+upload_to_onedrive = False
+
 ### Directory on OneDrive where backup will be stored.
-### If up2onedrive is False you don't need to provide.
+### If upload_to_onedrive is False you don't need to provide.
 drive_dir    = /backup/important-dirs
 
 ### schedule execution time
@@ -46,13 +48,13 @@ exec_time       = * * * *
 
 [dirs2backup_remote]
 ### Host on which targz will be executed
-host       = 192.168.0.15
+host       = dir1.local
 
 ### Array of directories to do backup
-path		= /data/es;/data/test
+path		= /etc/hostname;/home;/var/lib
 
 ### Array of destinations where to store backups
-destination	= /data/backup;/data2/backup
+destination	= /data/backup_dir
 
 ### Encrypting backup files
 encrypt		= False
@@ -63,8 +65,39 @@ enc_pass	= 'encryptionpassword'
 ### Type of backup, supported types are full, differential, incremental
 backup_type = incremental
 
+upload_to_onedrive = False
+
 ### Directory on OneDrive where backup will be stored.
-### If up2onedrive is False you don't need to provide.
+### If upload_to_onedrive is False you don't need to provide.
+drive_dir    = /backup/important-dirs
+
+### schedule execution time
+exec_time       = * * * *
+
+
+[dirs2backup_remote]
+### Host on which targz will be executed
+host       = dir2.local
+
+### Array of directories to do backup
+path		= /etc/hostname
+
+### Array of destinations where to store backups
+destination	= /data/backup_dir
+
+### Encrypting backup files
+encrypt		= False
+
+### Password for encryption
+enc_pass	= 'encryptionpassword'
+
+### Type of backup, supported types are full, differential, incremental
+backup_type = incremental
+
+upload_to_onedrive = False
+
+### Directory on OneDrive where backup will be stored.
+### If upload_to_onedrive is False you don't need to provide.
 drive_dir    = /backup/important-dirs
 
 ### schedule execution time

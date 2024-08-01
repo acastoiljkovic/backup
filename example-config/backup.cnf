@@ -19,5 +19,5 @@ include     = /etc/backup/conf.d/*.cnf
 ### s m h d
 ### s-second, m-minute, h-hour, d-day
 ### 4 * means run again immediately
-#exec_time  = * * * *
+exec_time  = * * * *
 

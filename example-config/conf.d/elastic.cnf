@@ -3,7 +3,7 @@
 # In order to perform
 [elasticsearch]
 ### URL to elasticsearch cluster
-url      = http://192.168.0.15:9200
+url      = http://es1.local:9200
 
 ### Full backup or only specific index
 full        = True
@@ -12,7 +12,7 @@ full        = True
 #index       = company
 
 ### Location on disk where snapshots will be stored
-location    = /data/es
+location    = /data/backup_es
 
 ### Repo name in Elasticsearch where snapshots will be stored
 repo        = es_backup

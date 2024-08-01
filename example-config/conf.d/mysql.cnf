@@ -5,16 +5,16 @@
 ### Section for MySQL ###
 [mysql]
 ### MySQL user that can do mysqldump
-user 	 	= dbuser
+user 	 	= test
 
 ### Password for MySQL user
-password 	= samplepassword
+password 	= test123
 
 ### Database that will be dumped
-database 	= sampledb
+database 	= test
 
 ### Directory to store MySQL dump
-destination	= /data/mysqldump
+destination	= /data/backup_ms
 
 ### Encrypting backup file 
 encrypt		= False
@@ -22,8 +22,10 @@ encrypt		= False
 ### Password for encryption
 enc_pass	= 'encryptionpassword'
 
+upload_to_onedrive = False
+
 ### Directory on OneDrive where backup will be stored.
-### If up2onedrive is False or not provided you don't need to provide.
+### If upload_to_onedrive is False or not provided you don't need to provide.
 drive_dir    = /backup/mysqldump
 
 ### schedule execution time
@@ -52,7 +54,7 @@ exec_time       = * * * *
 ### Execute mysqldump to remote machines
 [mysqldump_remote]
 ### Host on which mysqldump will be executed
-host       = 192.168.0.15
+host       = ms1.local
 ### MySQL users that can do mysqldump
 user 	 	= dbuser
 
@@ -74,8 +76,10 @@ encrypt		= True
 ### Password for encryption
 enc_pass	= 'encryptionpassword'
 
+upload_to_onedrive = False
+
 ### Directory on OneDrive where backup will be stored.
-### If up2onedrive is False you don't need to provide.
+### If upload_to_onedrive is False you don't need to provide.
 drive_dir    = /backup/mysqldump
 
 ### schedule execution time
