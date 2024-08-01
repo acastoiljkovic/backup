@@ -3,5 +3,7 @@ network.host: 0.0.0.0
 http.port: 9200
 discovery.seed_hosts: [{{ groups['es'] | join(',') }}]
 node.name: {{ ansible_hostname }}
-xpack.security.enabled: true
 cluster.initial_master_nodes: [{{ groups['es'] | join(',') }}]
+path.data: /var/lib/elasticsearch
+path.logs: /var/log/elasticsearch
+path.repo: ["/data/bckup_es"]

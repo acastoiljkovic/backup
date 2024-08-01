@@ -22,12 +22,6 @@
         state: present
         disable_gpg_check: true
 
-    - name: Ensure Elasticsearch is started and enabled
-      service:
-        name: elasticsearch
-        state: started
-        enabled: yes
-
     - name: Configure Elasticsearch
       template:
         src: elasticsearch.yml.j2
@@ -36,15 +30,8 @@
         group: root
         mode: '0644'
 
-    - name: Set up Elasticsearch passwords
-      ansible.builtin.command: /usr/share/elasticsearch/bin/elasticsearch-setup-passwords auto
-      register: es_password_setup
-
-    - name: Elasticsearch password
-      debug:
-        msg: "Password setup response: {{ es_password_setup }}"
-
-    - name: Restart Elasticsearch
-      ansible.builtin.service:
+    - name: Ensure Elasticsearch is started and enabled
+      service:
         name: elasticsearch
-        state: restarted
+        state: started
+        enabled: yes
