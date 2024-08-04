@@ -574,8 +574,7 @@ def load_configuration(path='/etc/backup/backup.cnf'):
     if include is not None:
         include.strip()
 
-    if logger is None:
-        init_logger(log_level, log_path)
+    init_logger(log_level, log_path)
 
     onedrive = None
 
