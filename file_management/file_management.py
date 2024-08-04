@@ -309,3 +309,16 @@ def keep_only_oldest_and_newest(directory, name, encrypt):
                 logger.debug("File " + f + " successfully deleted")
     else:
         logger.error("Error while listing files: " + err)
+
+
+def path_exists(path, host=None):
+    path_check_command = (
+            '[ -d "' + path + '" ] && echo "true" || echo "false"'
+    )
+    if host is not None:
+        path_cmd_code, path_cmd_out, path_cmd_err = utils.run_remote(path_check_command, host)
+    else:
+        path_cmd_code, path_cmd_out, path_cmd_err = utils.run(path_check_command)
+    if path_cmd_out:
+        return path_cmd_out.read().decode().strip().lower() == 'true'
+    return False

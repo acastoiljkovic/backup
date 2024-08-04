@@ -4,7 +4,7 @@ import subprocess
 from datetime import datetime
 
 import schedule
-from paramiko import SSHClient
+from paramiko import SSHClient,AutoAddPolicy
 
 logger = logging.getLogger("backup_logger")
 
@@ -69,6 +69,7 @@ def run_remote(cmd, host, cmd_log=None):
         if cmd_log is None:
             cmd_log = cmd
         client = SSHClient()
+        client.set_missing_host_key_policy(AutoAddPolicy())
         client.load_system_host_keys()
         logger.info("Executing command: " + str(cmd_log) + " on remote host: " + host)
         command = ""
@@ -92,11 +93,6 @@ def run_remote(cmd, host, cmd_log=None):
             out = str(stdout.read(), "utf-8")
         except:
             logger.debug("There is no stdout")
-        try:
-            err = str(stderr.read(), "utf-8")
-        except:
-            logger.debug("There is no stderr")
-
         client.close()
         return 0, out, err
     except Exception as e:
