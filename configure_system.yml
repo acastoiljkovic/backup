@@ -2,6 +2,8 @@
   hosts: linux
   become: true
   gather_facts: true
+  vars:
+    ssh_pub_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJmUy5afsz5m1GJJ9j5hz8/tKZ304S3m8dYSJgfCeFjQ root@backupserver.local"
   tasks:
     - name: Install tools
       ansible.builtin.yum:
@@ -10,7 +12,14 @@
           - htop
           - vim
           - yum-utils
+          - openssl
         state: latest
+
+    - name: Add SSH key to authorized_keys
+      authorized_key:
+        user: root
+        key: "{{ ssh_pub_key }}"
+        state: present
 
     - name: Change SELinux in /etc/selinux/config to disabled
       ansible.builtin.lineinfile:
@@ -30,10 +39,10 @@
         state: restarted
         enabled: true
 
-    - name: Update yum
-      ansible.builtin.yum:
-        name: '*'
-        state: latest
+#    - name: Update yum
+#      ansible.builtin.yum:
+#        name: '*'
+#        state: latest
 
     - name: Copy hosts file
       ansible.builtin.copy:

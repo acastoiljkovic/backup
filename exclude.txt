@@ -1,1 +1,9 @@
-.*/  # Excludes any directory whose name contains a dot
+.*/
+exclude.txt
+install*
+hosts
+update_hosts_file.sh
+Vagrantfile
+TODO.md
+*.j2
+configure*

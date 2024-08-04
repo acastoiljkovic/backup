@@ -27,11 +27,19 @@
         src: elasticsearch.yml.j2
         dest: /etc/elasticsearch/elasticsearch.yml
         owner: root
-        group: root
+        group: elasticsearch
         mode: '0644'
+
+    - name: Ensure /data/backup_es directory exists
+      ansible.builtin.file:
+        path: /data/backup_es
+        state: directory
+        owner: elasticsearch
+        group: elasticsearch
+        mode: '0755'
 
     - name: Ensure Elasticsearch is started and enabled
       service:
         name: elasticsearch
-        state: started
+        state: restarted
         enabled: yes

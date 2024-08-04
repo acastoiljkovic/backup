@@ -18,10 +18,10 @@ location    = /data/backup_es
 repo        = es_backup
 
 ### User to login
-user        = elastic
+user        =
 
 ### Password for provided user
-password    = samplepassword
+password    =
 
 ### Remove old snapshots
 remove_old  = True

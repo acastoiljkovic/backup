@@ -34,6 +34,13 @@ vagrant up
 
 ### Configure system
 ```
+# prepare hosts file
+./update_hosts_file.sh
+# skip fingerprint check
+export ANSIBLE_HOST_KEY_CHECKING=false
+# use ssh key without prompt for password
+eval "$(ssh-agent -s)"
+ssh-add
 # using ansible playbook
 ansible-playbook configure_system.yml -i hosts -u vagrant
 ```
@@ -46,11 +53,14 @@ ansible-playbook install_mysql.yml -i hosts -u vagrant
 
 ### Install Elasticsearch
 ```
+# using ansible playbook
+ansible-playbook install_elastic.yml -i hosts -u vagrant
+
 # installation guide
 # https://www.elastic.co/guide/en/elasticsearch/reference/current/rpm.html
 
 # it is important to add path.repo to configuration
-path.repo: ["/data/bckup_es"]
+# path.repo: ["/data/bckup_es"]
 
 # direcotry /data/backup_es shoult be mounted as NFS to the all nodes
 # NFS server shoud be backup server
@@ -59,12 +69,12 @@ path.repo: ["/data/bckup_es"]
 ### Configure NFS
 ```
 # using ansible playbook
-ansible-playbook configure_nfs.yml -i hosts -u vagrant
 ```
 
 ### Prepare backup server
-```
+```ansible-playbook configure_nfs.yml -i hosts -u vagrant
+
 # using ansible playbook
-ansible-playbook install_backupp_system.yml -i hosts -u vagrant
+ansible-playbook install_backup_system.yml -i hosts -u vagrant
 ```
 
