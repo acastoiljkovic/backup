@@ -101,6 +101,14 @@ class OneDrive:
         if the response is 200, the tokens are valid, if the response is 401, the tokens are expired, if the response
         is anything else, there's an unexpected error :return: a boolean value.
         """
+        if self.__valid_tokens():
+            return True
+        else:
+            self.__perform_login()
+
+        return False
+
+    def __valid_tokens(self):
         if self.tokens is not None:
             if self.tokens['access_token'] is not None:
                 logger.debug('Access token exists')
@@ -123,10 +131,7 @@ class OneDrive:
                     else:
                         logger.error("Unexpected error: " + str(response.content))
                 return True
-        else:
-            self.__perform_login()
-
-        return False
+            return False
 
     def get_tokens(self, redirection_url):
         """
@@ -212,7 +217,7 @@ class OneDrive:
         """
         if self.__get_tokens_from_file():
             logger.info("Successfully gathered tokens from file!")
-        elif self.check_tokens():
+        elif self.__valid_tokens():
             logger.info("Tokens already exists!")
         else:
             logger.info("Please go to this URL: " +
@@ -280,7 +285,6 @@ class OneDrive:
         """
         request_body = {
             "item": {
-                "description": "Uploaded file from backup system.",
                 "name": file_name
             }
         }
@@ -300,6 +304,7 @@ class OneDrive:
             )
             if 200 <= response.status_code < 300:
                 logger.debug(response.json())
+                logger.debug("Status code: " + str(response.status_code))
                 return response
             elif response.status_code == 401:
                 logger.warning("Access token is expired, renewing it! ")
@@ -307,6 +312,10 @@ class OneDrive:
                 return self.__get_upload_url_request(one_drive_dir, file_name).json()['uploadUrl']
             else:
                 logger.error("Error while generating upload URL!")
+                logger.debug("Status code: " + str(response.status_code))
+                logger.debug("Response body: " + str(response.json()))
+                logger.debug("Request body: " + str(request_body))
+                logger.debug("Headers: " + str(headers))
                 return None
         except Exception as e:
             logger.error(str(e))

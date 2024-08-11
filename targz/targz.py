@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import time
 from os.path import exists
+from os import mkdir
 from utils import utils
 import logging
 from file_management import file_management
@@ -25,6 +26,7 @@ def targz(paths, destinations, encrypt, enc_pass, no_copies=3, one_drive=None, o
     :return: Nothing is being returned.
     """
 
+    check_destination_directories(destinations)
     for dir2compress in paths:
         logger.info("---------------------------------------")
         logger.info("start targz full")
@@ -81,7 +83,7 @@ def targz(paths, destinations, encrypt, enc_pass, no_copies=3, one_drive=None, o
                     file_name=file_prefix, one_drive_dir=one_drive_dir, encrypt=encrypt, no_copies=no_copies)
             if len(destinations) > 1:
                 for i in range(0, len(destinations)):
-                    if i != 0:
+                    if i != 0 and file_management.path_exists(destinations[i]):
                         file_management.copy(file_name, destinations[i], fn)
                     file_management.rmold(
                         directory=destinations[i], name=file_prefix, encrypt=encrypt, no_copies=no_copies)
@@ -102,6 +104,7 @@ def targz_incremental(paths, destinations, encrypt, enc_pass, one_drive=None, on
     :return: Nothing is being returned.
     """
 
+    check_destination_directories(destinations)
     for dir2compress in paths:
         logger.info("---------------------------------------")
         logger.info("start targz incremental")
@@ -159,9 +162,10 @@ def targz_incremental(paths, destinations, encrypt, enc_pass, one_drive=None, on
                                       local_dir=destinations[0], file_name=file_prefix + '.snap')
             if len(destinations) > 1:
                 for i in range(1, len(destinations)):
-                    file_management.copy(file_name, destinations[i], fn)
-                    file_management.copy(
-                        snap_file, destinations[i], file_prefix + '.snap')
+                    if file_management.path_exists(destinations[i]):
+                        file_management.copy(file_name, destinations[i], fn)
+                        file_management.copy(
+                            snap_file, destinations[i], file_prefix + '.snap')
         else:
             logger.error("Path: " + dir2compress + " , doesn't exists!")
 
@@ -180,6 +184,7 @@ def targz_differential(paths, destinations, encrypt, enc_pass, one_drive=None, o
     :return: Nothing is being returned.
     """
 
+    check_destination_directories(destinations)
     for dir2compress in paths:
         logger.info("---------------------------------------")
         logger.info("start targz differential")
@@ -249,7 +254,7 @@ def targz_differential(paths, destinations, encrypt, enc_pass, one_drive=None, o
 
             if len(destinations) >= 1:
                 for i in range(0, len(destinations)):
-                    if i != 0:
+                    if i != 0 and file_management.path_exists(destinations[i]):
                         file_management.copy(file_name, destinations[i], fn)
                         file_management.copy(
                             snap_file, destinations[i], file_prefix + '.snap')
@@ -277,6 +282,7 @@ def targz_remote(host, paths, destinations, encrypt, enc_pass, no_copies=3, one_
     :return: Nothing is being returned.
     """
 
+    check_destination_directories(destinations)
     for path in paths:
         logger.info("---------------------------------------")
         logger.info("start targz full remote")
@@ -346,7 +352,7 @@ def targz_remote(host, paths, destinations, encrypt, enc_pass, no_copies=3, one_
 
             if len(destinations) >= 1:
                 for i in range(0, len(destinations)):
-                    if i != 0:
+                    if i != 0 and file_management.path_exists(destinations[i]):
                         file_management.copy(file_name, destinations[i], fn)
                     file_management.rmold(
                         directory=destinations[i], name=file_prefix, encrypt=encrypt, no_copies=no_copies)
@@ -368,6 +374,7 @@ def targz_incremental_remote(host, paths, destinations, encrypt, enc_pass, one_d
     :return: The return value is a tuple (status, output)
     """
 
+    check_destination_directories(destinations)
     for path in paths:
         logger.info("---------------------------------------")
         logger.info("start targz incremental remote")
@@ -425,9 +432,10 @@ def targz_incremental_remote(host, paths, destinations, encrypt, enc_pass, one_d
                                       local_dir=destinations[0], file_name=file_prefix + '.snap')
             if len(destinations) >= 1:
                 for i in range(1, len(destinations)):
-                    file_management.copy(file_name, destinations[i], fn)
-                    file_management.copy(
-                        snap_file, destinations[i], file_prefix + '.snap')
+                    if file_management.path_exists(destinations[i]):
+                        file_management.copy(file_name, destinations[i], fn)
+                        file_management.copy(
+                            snap_file, destinations[i], file_prefix + '.snap')
         else:
             logger.error("Path: " + path + " , doesn't exists!")
 
@@ -446,6 +454,7 @@ def targz_differential_remote(host, paths, destinations, encrypt, enc_pass, one_
     :return: The return value is a tuple (status, output)
     """
 
+    check_destination_directories(destinations)
     for path in paths:
         logger.info("---------------------------------------")
         logger.info("start targz differential remote")
@@ -456,6 +465,7 @@ def targz_differential_remote(host, paths, destinations, encrypt, enc_pass, one_
             '/',
             '-',
         )
+
         if file_management.path_exists(path, host):
             if file_prefix[0] == '-':
                 file_prefix = file_prefix[1:len(file_prefix)]
@@ -515,7 +525,7 @@ def targz_differential_remote(host, paths, destinations, encrypt, enc_pass, one_
 
             if len(destinations) >= 1:
                 for i in range(0, len(destinations)):
-                    if i != 0:
+                    if i != 0 and file_management.path_exists(destinations[i]):
                         file_management.copy(file_name, destinations[i], fn)
                         file_management.copy(
                             snap_file, destinations[i], file_prefix + '.snap')
@@ -525,3 +535,14 @@ def targz_differential_remote(host, paths, destinations, encrypt, enc_pass, one_
                         directory=destinations[i], name=file_prefix, encrypt=encrypt)
         else:
             logger.error("Path: " + path + " , doesn't exists!")
+
+
+def check_destination_directories(destinations):
+    """
+    It takes a list of directories and check if they are present on machine.
+
+    :param destinations: list of strings
+    """
+    for i in range(0, len(destinations)):
+        if not file_management.path_exists(destinations[i]):
+            logger.error("Destination directory: " + destinations[i] + " doesn't exists!")

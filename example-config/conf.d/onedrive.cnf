@@ -1,4 +1,6 @@
 ### Section for OneDrive ###
+### NOTE! place this alongside any other config if you want to use OneDrive ###
+### NOTE! OneDrive won't work if it is in separate file ###
 [onedrive]
 ### Client secret gained from Application
 client_secret   =

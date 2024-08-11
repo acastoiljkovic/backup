@@ -232,7 +232,6 @@ class ConfigurationData:
                 'onedrive', 'tokens_file', fallback='/etc/backup/tokens.json')
             if self.onedrive_config is not None:
                 logger.warning("OneDrive config exists in main file and will be overwritten!")
-                self.onedrive_config = onedrive
             else:
                 self.onedrive_config = onedrive
 
@@ -654,6 +653,7 @@ def init_logger(log_level, log_path):
     :param log_path: The path where the log file will be created
     """
     try:
+        logger.handlers.clear()
         console_handler = logging.StreamHandler(stream=sys.stdout)
         if log_level.upper() == 'DEBUG':
             logger.setLevel(logging.DEBUG)

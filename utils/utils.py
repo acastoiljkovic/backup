@@ -3,6 +3,7 @@ import logging
 import subprocess
 from datetime import datetime
 
+import paramiko
 import schedule
 from paramiko import SSHClient,AutoAddPolicy
 

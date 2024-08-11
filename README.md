@@ -11,7 +11,7 @@ Backup system is capable of doing multiple things:
 
 
 
-### Infrastructure of backup system that is explained in detail in section deploymen:
+### Infrastructure of backup system:
 ![Infrastructure](images/infrastructure.png)
 
 
@@ -36,11 +36,14 @@ vagrant up
 ```
 # prepare hosts file
 ./update_hosts_file.sh
+
 # skip fingerprint check
 export ANSIBLE_HOST_KEY_CHECKING=false
+
 # use ssh key without prompt for password
 eval "$(ssh-agent -s)"
 ssh-add
+
 # using ansible playbook
 ansible-playbook configure_system.yml -i hosts -u vagrant
 ```
@@ -69,12 +72,20 @@ ansible-playbook install_elastic.yml -i hosts -u vagrant
 ### Configure NFS
 ```
 # using ansible playbook
+ansible-playbook configure_nfs.yml -i hosts -u vagrant
 ```
 
 ### Prepare backup server
-```ansible-playbook configure_nfs.yml -i hosts -u vagrant
-
+```
 # using ansible playbook
 ansible-playbook install_backup_system.yml -i hosts -u vagrant
 ```
+
+### Configure OneDrive
+ClientID and TenantID can be found at Overview tab of your applicaiton:
+NOTE: If you are using personal account, you must specify "common" for tenand_id in configuration
+![OneDrive](images/onedrive1.png)
+
+Client secret is the value of created secret:
+![OneDrive](images/onedrive2.png)
 

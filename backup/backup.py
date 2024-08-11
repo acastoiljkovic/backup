@@ -20,7 +20,7 @@ def mysql_module(mysql_conf):
     from mysql import mysql
     if mysql_conf.host is None or \
             mysql_conf.host == '' or mysql_conf.host == '127.0.0.1' or mysql_conf.host == 'localhost':
-        if mysql_conf.upload_to_onedrive.upper() == 'True' and onedrive is not None:
+        if mysql_conf.upload_to_onedrive.upper() == 'TRUE' and onedrive is not None:
             mysql.mysqldump(
                 database=mysql_conf.database,
                 user=mysql_conf.user,
@@ -45,7 +45,7 @@ def mysql_module(mysql_conf):
                 one_drive_dir=None
             )
     else:
-        if mysql_conf.upload_to_onedrive.upper() == 'True' and onedrive is not None:
+        if mysql_conf.upload_to_onedrive.upper() == 'TRUE' and onedrive is not None:
             mysql.mysqldump_remote(
                 host=mysql_conf.host,
                 user=mysql_conf.user,
@@ -313,7 +313,6 @@ def schedule_modules(conf):
 def run(path):
     global config_file_path
     config_file_path = path
-
     run_or_schedule_based_on_config(config_file_path)
 
 
@@ -330,20 +329,7 @@ def reload():
     for job in schedule.get_jobs():
         schedule.cancel_job(job)
     global config_file_path
-
-    # config_data = config.get_conf_data(include, no_copies, log_level, log_path, exec_time, one_drive_general)
     run_or_schedule_based_on_config(config_file_path)
-    # init_one_drive()
-    # if conf_data.exec_time is None:
-    #     run_elastic()
-    #     run_mysqldump()
-    #     run_targz()
-    #     run_sync()
-    #     run_mysqldump_remote()
-    #     run_targz_remote()
-    #     run_sync_remote()
-    # else:
-    #
 
 
 def run_or_schedule_based_on_config(path):
@@ -359,7 +345,7 @@ def run_or_schedule_based_on_config(path):
     config_data, no_copies, log_level, log_path, exec_time, include, onedrive = config.load_configuration(path)
     scheduled_exists = 0
     for conf in config_data:
-        if onedrive is not None:
+        if onedrive is None:
             onedrive = one_drive.OneDrive(
                 client_secret=conf.onedrive_config.client_secret,
                 client_id=conf.onedrive_config.client_id,
@@ -367,6 +353,8 @@ def run_or_schedule_based_on_config(path):
                 tokens_file=conf.onedrive_config.tokens_file,
                 tenant_id=conf.onedrive_config.tenant_id,
             )
+            onedrive.check_tokens()
+        elif onedrive is not None:
             onedrive.check_tokens()
         if conf.exec_time is None:
             run_modules(conf)

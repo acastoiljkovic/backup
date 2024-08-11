@@ -15,41 +15,41 @@
         rsync_opts:
           - "--exclude-from=exclude.txt"
 
-    - name: Copy private key
-      ansible.builtin.copy:
-        src: id_ed25519
-        dest: /root/.ssh/
-        mode: 0600
-
-    - name: Add fingerprints to known_hosts
-      ansible.builtin.command: ssh-keyscan -t rsa,dsa {{ item }} >> /root/.ssh/known_hosts
-      loop: "{{ known_hosts }}"
-
-    - name: Copy public key
-      ansible.builtin.copy:
-        src: id_ed25519.pub
-        dest: /root/.ssh/
-        mode: 0644
-
-    - name: Install Python 3.9 (if not installed)
-      ansible.builtin.package:
-        name: python3.9
-        state: present
-
-    - name: Copy pip install script
-      ansible.builtin.copy:
-        src: get-pip.py
-        dest: /opt/
-        mode: 0644
-
-    - name: Install pip
-      ansible.builtin.command: python3.9 /opt/get-pip.py
-
-    - name: Install Python packaging
-      ansible.builtin.command: pip3.9 install packaging
-
-    - name: Install Python requirements
-      ansible.builtin.command: pip3.9 install -r /opt/backup/requirements.txt
+#    - name: Copy private key
+#      ansible.builtin.copy:
+#        src: id_ed25519
+#        dest: /root/.ssh/
+#        mode: 0600
+#
+#    - name: Add fingerprints to known_hosts
+#      ansible.builtin.command: ssh-keyscan -t rsa,dsa {{ item }} >> /root/.ssh/known_hosts
+#      loop: "{{ known_hosts }}"
+#
+#    - name: Copy public key
+#      ansible.builtin.copy:
+#        src: id_ed25519.pub
+#        dest: /root/.ssh/
+#        mode: 0644
+#
+#    - name: Install Python 3.9 (if not installed)
+#      ansible.builtin.package:
+#        name: python3.9
+#        state: present
+#
+#    - name: Copy pip install script
+#      ansible.builtin.copy:
+#        src: get-pip.py
+#        dest: /opt/
+#        mode: 0644
+#
+#    - name: Install pip
+#      ansible.builtin.command: python3.9 /opt/get-pip.py
+#
+#    - name: Install Python packaging
+#      ansible.builtin.command: pip3.9 install packaging
+#
+#    - name: Install Python requirements
+#      ansible.builtin.command: pip3.9 install -r /opt/backup/requirements.txt
 
     - name: Ensure /etc/backup directory exists
       ansible.builtin.file:
@@ -57,12 +57,12 @@
         state: directory
         mode: '0755'
 
-    - name: Copy config directory to remote server
-      ansible.posix.synchronize:
-        src: ./example-config/
-        dest: /etc/backup/
-        delete: true
-        recursive: true
+#    - name: Copy config directory to remote server
+#      ansible.posix.synchronize:
+#        src: ./example-config/
+#        dest: /etc/backup/
+#        delete: true
+#        recursive: true
 
     - name: Ensure /var/log/backup directory exists
       ansible.builtin.file:
@@ -75,8 +75,6 @@
         src: backup.service.j2
         dest: "{{ backup_service_file }}"
         mode: '0655'
-      notify:
-        - Reload systemd
 
     - name: Reload systemd
       ansible.builtin.command: systemctl daemon-reload

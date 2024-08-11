@@ -315,10 +315,17 @@ def path_exists(path, host=None):
     path_check_command = (
             '[ -d "' + path + '" ] && echo "true" || echo "false"'
     )
+    logger.debug("Check path command: "+path_check_command)
     if host is not None:
+        logger.debug("Checking path: " + path + " on host: " + host)
         path_cmd_code, path_cmd_out, path_cmd_err = utils.run_remote(path_check_command, host)
+        logger.debug("path_cmd_code: " + str(path_cmd_code) + " path_cmd_out: " + str(path_cmd_out) +
+                     " path_cmd_err: " + str(path_cmd_err))
     else:
+        logger.debug("Checking path: " + path + " locally")
         path_cmd_code, path_cmd_out, path_cmd_err = utils.run(path_check_command)
+        logger.debug("path_cmd_code: " + str(path_cmd_code) + " path_cmd_out: " + str(path_cmd_out) +
+                     " path_cmd_err: " + str(path_cmd_err))
     if path_cmd_out:
-        return path_cmd_out.read().decode().strip().lower() == 'true'
+        return path_cmd_out.strip().lower() == 'true'
     return False

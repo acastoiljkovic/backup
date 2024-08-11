@@ -5,6 +5,7 @@ After=multi-user.target
 [Service]
 Type=simple
 ExecStart=/usr/bin/python3.9 /opt/backup/main.py /etc/backup/backup.cnf &
+ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]
 WantedBy=multi-user.target
