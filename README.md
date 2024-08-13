@@ -54,6 +54,12 @@ ansible-playbook configure_system.yml -i hosts -u vagrant
 ansible-playbook install_mysql.yml -i hosts -u vagrant
 ```
 
+### Configure NFS
+```
+# using ansible playbook
+ansible-playbook configure_nfs.yml -i hosts -u vagrant
+```
+
 ### Install Elasticsearch
 ```
 # using ansible playbook
@@ -67,12 +73,6 @@ ansible-playbook install_elastic.yml -i hosts -u vagrant
 
 # direcotry /data/backup_es shoult be mounted as NFS to the all nodes
 # NFS server shoud be backup server
-```
-
-### Configure NFS
-```
-# using ansible playbook
-ansible-playbook configure_nfs.yml -i hosts -u vagrant
 ```
 
 ### Prepare backup server
@@ -89,3 +89,17 @@ NOTE: If you are using personal account, you must specify "common" for tenand_id
 Client secret is the value of created secret:
 ![OneDrive](images/onedrive2.png)
 
+
+### All-in-one commands
+```
+vagrant up
+sudo ./update_hosts_file.sh
+export ANSIBLE_HOST_KEY_CHECKING=false
+eval "$(ssh-agent -s)"
+ssh-add
+ansible-playbook configure_system.yml -i hosts -u vagrant
+ansible-playbook install_mysql.yml -i hosts -u vagrant
+ansible-playbook configure_nfs.yml -i hosts -u vagrant
+ansible-playbook install_elastic.yml -i hosts -u vagrant
+ansible-playbook install_backup_system.yml -i hosts -u vagrant
+```
