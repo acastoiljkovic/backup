@@ -342,9 +342,25 @@ def run_or_schedule_based_on_config(path):
     global one_drive_general
     global include
 
-    config_data, no_copies, log_level, log_path, exec_time, include, onedrive = config.load_configuration(path)
+    config_data, no_copies, log_level, log_path, exec_time, include, onedrive_config = config.load_configuration(path)
     scheduled_exists = 0
     for conf in config_data:
+        if conf.onedrive_config is not None:
+            onedrive = one_drive.OneDrive(
+                client_secret=conf.onedrive_config.client_secret,
+                client_id=conf.onedrive_config.client_id,
+                scopes=conf.onedrive_config.scopes,
+                tokens_file=conf.onedrive_config.tokens_file,
+                tenant_id=conf.onedrive_config.tenant_id,
+            )
+        elif onedrive_config is not None:
+            onedrive = one_drive.OneDrive(
+                client_secret=onedrive_config.client_secret,
+                client_id=onedrive_config.client_id,
+                scopes=onedrive_config.scopes,
+                tokens_file=onedrive_config.tokens_file,
+                tenant_id=onedrive_config.tenant_id,
+            )
         if onedrive is not None:
             onedrive.check_tokens()
         if conf.exec_time is None:

@@ -232,8 +232,7 @@ class ConfigurationData:
                 'onedrive', 'tokens_file', fallback='/etc/backup/tokens.json')
             if self.onedrive_config is not None:
                 logger.warning("OneDrive config exists in main file and will be overwritten!")
-            else:
-                self.onedrive_config = onedrive
+            self.onedrive_config = onedrive
 
     def print_formatted(self):
         """
@@ -575,19 +574,19 @@ def load_configuration(path='/etc/backup/backup.cnf'):
 
     init_logger(log_level, log_path)
 
-    onedrive = None
+    onedrive_config = None
 
     if config_parser.has_section('onedrive'):
-        onedrive = OneDriveConfig()
-        onedrive.client_secret = config_parser.get(
+        onedrive_config = OneDriveConfig()
+        onedrive_config.client_secret = config_parser.get(
             'onedrive', 'client_secret', fallback='')
-        onedrive.client_id = config_parser.get(
+        onedrive_config.client_id = config_parser.get(
             'onedrive', 'client_id', fallback='')
-        onedrive.tenant_id = config_parser.get(
+        onedrive_config.tenant_id = config_parser.get(
             'onedrive', 'tenant_id', fallback='')
-        onedrive.scopes = config_parser.get(
+        onedrive_config.scopes = config_parser.get(
             'onedrive', 'scopes', fallback="").split(';')
-        onedrive.tokens_file = config_parser.get(
+        onedrive_config.tokens_file = config_parser.get(
             'onedrive', 'tokens_file', fallback='/etc/backup/tokens.json')
 
     formatted = """
@@ -610,17 +609,17 @@ def load_configuration(path='/etc/backup/backup.cnf'):
     conf_data = []
 
     if include is None or include == '':
-        data = ConfigurationData(no_copies, log_level, log_path, exec_time, onedrive_config=onedrive)
+        data = ConfigurationData(no_copies, log_level, log_path, exec_time, onedrive_config=onedrive_config)
         data.load_config(path)
         conf_data.append(data)
         data.print_formatted()
     else:
-        conf_data = get_conf_data(include, no_copies, log_level, log_path, exec_time, onedrive)
+        conf_data = get_conf_data(include, no_copies, log_level, log_path, exec_time, onedrive_config)
 
-    return conf_data, no_copies, log_level, log_path, exec_time, include, onedrive
+    return conf_data, no_copies, log_level, log_path, exec_time, include, onedrive_config
 
 
-def get_conf_data(include, no_copies, log_level, log_path, exec_time, onedrive):
+def get_conf_data(include, no_copies, log_level, log_path, exec_time, onedrive_config):
     """
     It takes in a bunch of arguments, and returns a list of objects of type ConfigurationData
 
@@ -629,7 +628,7 @@ def get_conf_data(include, no_copies, log_level, log_path, exec_time, onedrive):
     :param log_level: The level of logging to use
     :param log_path: The path to the log file
     :param exec_time: The time to execute the backup
-    :param onedrive: This is the onedrive configuration data
+    :param onedrive_config: This is the onedrive configuration data
     :return: A list of ConfigurationData objects.
     """
     conf_data = []
@@ -637,7 +636,7 @@ def get_conf_data(include, no_copies, log_level, log_path, exec_time, onedrive):
         logger.warning("There is no include directive! ")
     else:
         for file in glob.glob(include):
-            data = ConfigurationData(no_copies, log_level, log_path, exec_time, onedrive_config=onedrive)
+            data = ConfigurationData(no_copies, log_level, log_path, exec_time, onedrive_config=onedrive_config)
             data.load_config(file)
             conf_data.append(data)
             data.print_formatted()
