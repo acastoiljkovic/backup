@@ -1,3 +1,4 @@
+import time
 from datetime import timedelta
 import os
 from urllib.parse import urlparse
@@ -109,29 +110,32 @@ class OneDrive:
         return False
 
     def __valid_tokens(self):
-        if self.tokens is not None:
-            if self.tokens['access_token'] is not None:
-                logger.debug('Access token exists')
-                if self.tokens['refresh_token'] is not None:
-                    logger.debug('Refresh token exists')
-                    get_list_url = self.__GRAPH_API_URL + f'/me/drive/items/root/children'
-                    headers = {
-                        'Authorization': 'Bearer ' + self.tokens['access_token'],
-                    }
-                    response = requests.get(
-                        get_list_url,
-                        headers=headers
-                    )
-                    logger.debug(response.json())
-                    if 200 <= response.status_code < 300:
-                        logger.info("Tokens are valid!")
-                    elif response.status_code == 401:
-                        logger.warning("Tokens expired !")
-                        self.renew_tokens()
-                    else:
-                        logger.error("Unexpected error: " + str(response.content))
-                return True
-            return False
+        try:
+            if self.tokens is not None:
+                if self.tokens['access_token'] is not None:
+                    logger.debug('Access token exists')
+                    if self.tokens['refresh_token'] is not None:
+                        logger.debug('Refresh token exists')
+                        get_list_url = self.__GRAPH_API_URL + f'/me/drive/items/root/children'
+                        headers = {
+                            'Authorization': 'Bearer ' + self.tokens['access_token'],
+                        }
+                        response = requests.get(
+                            get_list_url,
+                            headers=headers
+                        )
+                        logger.debug(response.json())
+                        if 200 <= response.status_code < 300:
+                            logger.info("Tokens are valid!")
+                        elif response.status_code == 401:
+                            logger.warning("Tokens expired !")
+                            self.renew_tokens()
+                        else:
+                            logger.error("Unexpected error: " + str(response.content))
+                    return True
+        except Exception as e:
+            logger.error("Something went wrong with access token: " + str(e))
+        return False
 
     def get_tokens(self, redirection_url):
         """
@@ -220,11 +224,22 @@ class OneDrive:
         elif self.__valid_tokens():
             logger.info("Tokens already exists!")
         else:
-            logger.info("Please go to this URL: " +
-                        self.create_authorization_url())
-            logger.info("Insert URL where have been redirected:")
-            redirection_url = input()
-            self.get_tokens(redirection_url=redirection_url)
+            gathered_token = False
+            while not gathered_token:
+                try:
+                    with open('/etc/backup/redirect.url', 'r') as file:
+                        self.get_tokens(redirection_url=file.read())
+                        gathered_token = True
+                except FileNotFoundError:
+                    logger.info("Please go to this URL: " +
+                                self.create_authorization_url())
+                    logger.info(
+                        "Paste redirected URL into this file /etc/backup/redirect.url")
+                    time.sleep(3)
+                except Exception as e:
+                    logger.error("An error occurred: " + str(e))
+                    logger.error("Shutting backup system!")
+                    break
 
     def upload_file(self, one_drive_dir="", local_dir=".", file_name="bck"):
         """
@@ -527,7 +542,7 @@ class OneDrive:
         """
         """
         It fetches a list of files from OneDrive, sorts them by date, and removes all but the newest and oldest files
-        
+
         :param file_name: The name of the file to be backed up
         :param one_drive_dir: The directory on OneDrive where the files are located
         :param encrypt: True/False

@@ -3,7 +3,7 @@
   become: true
   gather_facts: true
   vars:
-    ssh_pub_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC4RSoAYnWkqtddTae7giufuzBfrFYQFxELoijIvCPvH root@backupserver.local"
+    ssh_pub_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJmUy5afsz5m1GJJ9j5hz8/tKZ304S3m8dYSJgfCeFjQ root@backupserver.local"
   tasks:
     - name: Install tools
       ansible.builtin.yum:

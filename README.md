@@ -1,3 +1,18 @@
+# Table of content
+
+- [Backup system](#backup-system)
+  - [UseCase diagram of backup system](#usecase-diagram-of-backup-system)
+  - [Infrastructure of backup system](#Infrastructure-of-backup-system)
+  - [Provisioning infrastructure with Vagrant](#Provisioning-infrastructure-with-Vagrant)
+  - [Configure system](#configure-system)
+  - [Install MySQl](#Install-MySQl)
+  - [Configure NFS](#Configure-NFS)
+  - [Install Elasticsearch](#Install-Elasticsearch)
+  - [Prepare backup server](#Prepare-backup-server)
+  - [Configure OneDrive](#Configure-OneDrive)
+  - [All-in-one commands](#All-in-one-commands)
+
+
 # Backup System
 Backup system is capable of doing multiple things:
   - targz
@@ -6,16 +21,16 @@ Backup system is capable of doing multiple things:
   - snapshotting ES
   - upload to onedrive
 
-### UseCase diagram of backup system:
+### UseCase diagram of backup system
 ![UseCase](images/usecase.png)
 
 
 
-### Infrastructure of backup system:
+### Infrastructure of backup system
 ![Infrastructure](images/infrastructure.png)
 
 
-### For provisioning infrastructure you can use Vagrant. 
+### Provisioning infrastructure with Vagrant
 ```
 # install Vagrant using Homebrew
 brew install vagrant qemu
@@ -35,7 +50,7 @@ vagrant up
 ### Configure system
 ```
 # prepare hosts file
-./update_hosts_file.sh
+sudo ./update_hosts_file.sh
 
 # skip fingerprint check
 export ANSIBLE_HOST_KEY_CHECKING=false
