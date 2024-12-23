@@ -574,11 +574,9 @@ class OneDrive:
                                     rem_list.append(oldest)
                                 oldest = i
                         else:
-                            if oldest == newest:
-                                oldest = i
-                            else:
+                            if oldest != newest:
                                 rem_list.append(newest)
-                                newest = i
+                            newest = i
                     else:
                         newest = i
                         oldest = i
