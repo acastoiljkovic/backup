@@ -98,6 +98,7 @@ def run_remote(cmd, host, cmd_log=None):
         return 0, out, err
     except Exception as e:
         logger.error("Error while executing command, with exception: " + str(e))
+        return 0, "", str(e)
 
 
 def parse_time(exec_time):
