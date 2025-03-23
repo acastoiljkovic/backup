@@ -132,3 +132,6 @@ dmypy.json
 config.cnf
 *.large
 tokens.json
+.vagrant/
+id_ed25519
+id_ed25519.pub
