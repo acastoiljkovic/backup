@@ -118,3 +118,5 @@ ansible-playbook configure_nfs.yml -i hosts -u vagrant
 ansible-playbook install_elastic.yml -i hosts -u vagrant
 ansible-playbook install_backup_system.yml -i hosts -u vagrant
 ```
+
+# izmena
