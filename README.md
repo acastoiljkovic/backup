@@ -97,6 +97,9 @@ ansible-playbook install_backup_system.yml -i hosts -u vagrant
 ```
 
 ### Configure OneDrive
+
+[Azure Portal](https://portal.azure.com/)
+
 ClientID and TenantID can be found at Overview tab of your applicaiton:
 NOTE: If you are using personal account, you must specify "common" for tenand_id in configuration
 ![OneDrive](images/onedrive1.png)
