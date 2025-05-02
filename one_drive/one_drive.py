@@ -198,7 +198,8 @@ class OneDrive:
             'client_id': self.client_id,
             'scope': scope_post,
             # 'code': code,
-            'grant_type': 'authorization_code',
+            'refresh_token': self.tokens["refresh_token"],
+            'grant_type': 'refresh_token',
             'client_secret': self.client_secret
         }, headers=headers).json()
 
