@@ -198,10 +198,79 @@ class OneDrive:
             'client_id': self.client_id,
             'scope': scope_post,
             # 'code': code,
-            'refresh_token': self.tokens["refresh_token"],
-            'grant_type': 'refresh_token',
+            'grant_type': 'authorization_code',
             'client_secret': self.client_secret
         }, headers=headers).json()
+
+        if self.tokens['access_token'] != new_tokens['access_token']:
+            self.tokens['access_token'] = new_tokens['access_token']
+            logger.info("Access token is successfully renewed!")
+            try:
+                self.tokens['refresh_token'] = new_tokens['refresh_token']
+            except:
+                logger.warning("Keeping old refresh token!")
+            self.__save_tokens_to_file()
+        else:
+            logger.warning("New access token is same as old !")
+
+    def __perform_login(self):
+        """
+        If we can get tokens from a file, we do that. If we can't, we check if we already have tokens. If we don't,
+        we create an authorization URL and ask the user to go to it. Once they've done that, we ask them to paste the
+        URL they were redirected to, and we use that to get tokens
+        """
+        if self.__get_tokens_from_file():
+            logger.info("Successfully gathered tokens from file!")
+        elif self.__valid_tokens():
+            logger.info("Tokens already exists!")
+        else:
+            gathered_token = False
+            while not gathered_token:
+                try:
+                    with open('/etc/backup/redirect.url', 'r') as file:
+                        self.get_tokens(redirection_url=file.read())
+                        gathered_token = True
+                except FileNotFoundError:
+                    logger.info("Please go to this URL: " +
+                                self.create_authorization_url())
+                    logger.info(
+                        "Paste redirected URL into this file /etc/backup/redirect.url")
+                    time.sleep(3)
+                except Exception as e:
+                    logger.error("An error occurred: " + str(e))
+                    logger.error("Shutting backup system!")
+                    break
+
+    def upload_file(self, one_drive_dir="", local_dir=".", file_name="bck"):
+        """
+        It takes a file from a local directory and uploads it to a OneDrive directory
+
+        :param one_drive_dir: The directory on OneDrive where you want to upload the file
+        :param local_dir: The local directory where the file is located, defaults to . (optional)
+        :param file_name: The name of the file you want to upload, defaults to bck (optional)
+        """
+        if one_drive_dir[0] == '/':
+            one_drive_dir = one_drive_dir[1:]
+        if self.tokens is None:
+            self.__perform_login()
+        else:
+            self.check_tokens()
+            try:
+                upload_url = self.__get_upload_url(
+                    one_drive_dir=one_drive_dir, file_name=file_name)
+                logger.debug("Upload URL: " + str(upload_url))
+                self.__upload_to_one_drive(
+                    url=upload_url,
+                    file=(local_dir + '/' + file_name)
+                )
+
+            except Exception as e:
+                logger.error(
+                    "Error while performing upload to OneDrive: " + str(e))
+
+    def __get_upload_url(self, one_drive_dir, file_name):
+        """
+        It gets the upload URL for a file
 
         :param one_drive_dir: The directory where the file will be uploaded
         :param file_name: The name of the file to be uploaded
