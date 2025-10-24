@@ -22,7 +22,7 @@
         mode: 0600
 
     - name: Add fingerprints to known_hosts
-      ansible.builtin.command: ssh-keyscan -t rsa,dsa {{ item }} >> /root/.ssh/known_hosts
+      ansible.builtin.command: ssh-keyscan -t rsa {{ item }} >> /root/.ssh/known_hosts
       loop: "{{ known_hosts }}"
 
     - name: Copy public key

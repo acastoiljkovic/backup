@@ -8,7 +8,7 @@
   tasks:
     - name: Install Java
       dnf:
-        name: java-11-openjdk
+        name: java-21-openjdk
         state: present
 
     - name: Download Elasticsearch RPM
