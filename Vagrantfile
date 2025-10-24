@@ -24,7 +24,8 @@ Vagrant.configure("2") do |config|
           SHELL
         end
 
-        machine.vm.box = "fedora/40-cloud-base"
+        machine.vm.box = "fedora/42-cloud-base"
+        machine.vm.box_url = "https://mirror.karneval.cz/pub/linux/fedora/linux/releases/42/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-libvirt-42-1.1.x86_64.vagrant.libvirt.box"
         machine.vm.hostname = machine_name
         machine.vm.provider "libvirt" do |libvirt|
             libvirt.cpus = 2
